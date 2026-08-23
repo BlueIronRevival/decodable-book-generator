@@ -1,98 +1,149 @@
 // ===== Main Application =====
 document.addEventListener('DOMContentLoaded', () => {
-  // DOM Elements
   const form = document.getElementById('bookForm');
+  const skillSelect = document.getElementById('skillLevel');
+  const narrowSelect = document.getElementById('narrowSkill');
+  const narrowLabel = document.getElementById('narrowSkillLabel');
+  const templateSelect = document.getElementById('bookSelect');
+  const studentInput = document.getElementById('studentName');
+  const pronounSelect = document.getElementById('pronouns');
+  const statusEl = document.getElementById('formStatus');
   const previewSection = document.getElementById('previewSection');
   const bookPreview = document.getElementById('bookPreview');
-  const previewBtn = document.getElementById('previewBtn');
-  const printBtn = document.getElementById('printBtn');
-  const printPreviewBtn = document.getElementById('printPreviewBtn');
-  const resetBtn = document.getElementById('resetBtn');
 
-  // ===== Event Listeners =====
+  // ===== Populate the menus from the data files =====
 
-  // Preview button — shows booklet layout in preview area
-  previewBtn.addEventListener('click', () => {
-    const formData = getFormData();
-    if (validateForm(formData)) {
-      const bookData = BookGenerator.generate(formData);
-      if (bookData) {
-        const printHTML = BookGenerator.generatePrintHTML(bookData);
-        bookPreview.innerHTML = printHTML;
-        previewSection.style.display = 'block';
-        previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  });
+  function buildMenus() {
+    Object.entries(SKILLS).forEach(([value, skill]) => {
+      skillSelect.add(new Option(skill.label, value));
+    });
+    Object.entries(BOOK_TEMPLATES).forEach(([value, template]) => {
+      templateSelect.add(new Option(template.name, value));
+    });
+  }
 
-  // Print button — generates book, shows preview, then opens print dialog
-  printBtn.addEventListener('click', () => {
-    const formData = getFormData();
-    if (!validateForm(formData)) return;
+  /**
+   * Rebuild the narrow-skill menu for the selected skill. Every option shown
+   * maps to a real word list, so an unusable combination cannot be chosen.
+   */
+  function refreshNarrowSkills() {
+    const skill = SKILLS[skillSelect.value];
+    narrowSelect.innerHTML = '';
 
-    const bookData = BookGenerator.generate(formData);
-    if (!bookData) {
-      alert('Error generating book. Please check your selections.');
+    if (!skill) {
+      narrowLabel.textContent = 'Narrow Skill';
+      narrowSelect.add(new Option('-- Choose a skill first --', ''));
+      narrowSelect.disabled = true;
       return;
     }
 
-    const printHTML = BookGenerator.generatePrintHTML(bookData);
-    bookPreview.innerHTML = printHTML;
-    previewSection.style.display = 'block';
-    previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    narrowLabel.textContent = skill.narrowLabel;
+    narrowSelect.disabled = false;
+    narrowSelect.add(new Option(skill.narrowPlaceholder, ''));
+    skill.options.forEach((option) => {
+      narrowSelect.add(new Option(option.label, option.value));
+    });
 
-    // Open print dialog directly — no timeout needed
-    // window.print() works from user gesture context
-    setTimeout(() => {
-      window.print();
-    }, 100);
-  });
-
-  // Print from preview — opens print dialog
-  printPreviewBtn.addEventListener('click', () => {
-    if (!bookPreview.innerHTML.trim()) {
-      alert('Please preview the book first.');
-      return;
+    // Only one choice: select it so the teacher doesn't have to.
+    if (skill.options.length === 1) {
+      narrowSelect.value = skill.options[0].value;
     }
-    window.print();
-  });
+  }
 
-  // Reset button
-  resetBtn.addEventListener('click', () => {
-    form.reset();
-    previewSection.style.display = 'none';
-    bookPreview.innerHTML = '';
-  });
+  // ===== Status messages =====
 
-  // ===== Helper Functions =====
+  function setStatus(message, kind) {
+    statusEl.textContent = message || '';
+    statusEl.className = message ? `form-status form-status-${kind}` : 'form-status';
+  }
+
+  function clearStatus() {
+    setStatus('', '');
+  }
+
+  // ===== Book building =====
 
   function getFormData() {
     return {
-      skillLevel: document.getElementById('skillLevel').value,
-      narrowSkill: document.getElementById('narrowSkill').value,
-      bookTemplate: document.getElementById('bookSelect').value,
-      studentName: document.getElementById('studentName').value.trim(),
-      pronouns: document.getElementById('pronouns').value
+      skillLevel: skillSelect.value,
+      narrowSkill: narrowSelect.value,
+      bookTemplate: templateSelect.value,
+      studentName: studentInput.value.trim(),
+      pronouns: pronounSelect.value
     };
   }
 
-  function validateForm(data) {
-    if (!data.skillLevel) {
-      alert('Please select a skill level.');
-      return false;
+  /**
+   * Build and render the book. Returns the book on success, null on failure —
+   * and always tells the teacher which it was.
+   */
+  function buildAndRender() {
+    const result = BookGenerator.generate(getFormData());
+
+    if (!result.ok) {
+      setStatus(result.error, 'error');
+      previewSection.hidden = true;
+      bookPreview.innerHTML = '';
+      return null;
     }
-    if (!data.narrowSkill) {
-      alert('Please select a narrow skill (vowel focus).');
-      return false;
-    }
-    if (!data.bookTemplate) {
-      alert('Please select a book template.');
-      return false;
-    }
-    if (!data.studentName) {
-      alert('Please enter the student\'s name.');
-      return false;
-    }
-    return true;
+
+    bookPreview.innerHTML = BookGenerator.generatePrintHTML(result);
+    previewSection.hidden = false;
+    const sheets = result.pages.length / 2;
+    setStatus(
+      `"${result.bookTitle}" for ${result.studentName} — ` +
+      `${result.pages.length} pages on ${sheets / 2} double-sided sheet${sheets / 2 === 1 ? '' : 's'}.`,
+      'success'
+    );
+    return result;
   }
+
+  // ===== Event listeners =====
+
+  skillSelect.addEventListener('change', () => {
+    refreshNarrowSkills();
+    clearStatus();
+  });
+
+  [narrowSelect, templateSelect, studentInput, pronounSelect].forEach((el) => {
+    el.addEventListener('change', clearStatus);
+  });
+
+  document.getElementById('previewBtn').addEventListener('click', () => {
+    if (buildAndRender()) {
+      previewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    if (buildAndRender()) printBook();
+  });
+
+  document.getElementById('printPreviewBtn').addEventListener('click', () => {
+    if (bookPreview.innerHTML.trim()) printBook();
+    else setStatus('Preview the book first.', 'error');
+  });
+
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    form.reset();
+    refreshNarrowSkills();
+    previewSection.hidden = true;
+    bookPreview.innerHTML = '';
+    clearStatus();
+  });
+
+  /**
+   * Wait for the webfonts before printing — printing mid-load reflows the
+   * pages and can push content past the fold.
+   */
+  function printBook() {
+    const ready = document.fonts && document.fonts.ready
+      ? document.fonts.ready
+      : Promise.resolve();
+    ready.then(() => window.print());
+  }
+
+  // ===== Init =====
+  buildMenus();
+  refreshNarrowSkills();
 });

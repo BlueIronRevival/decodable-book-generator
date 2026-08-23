@@ -6,23 +6,21 @@
   <title>Decodable Book Generator</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="app-container">
-    <!-- Header -->
     <header class="app-header">
       <h1>📚 Decodable Book Generator</h1>
       <p class="subtitle">Create foldable reading books for your classroom</p>
     </header>
 
-    <!-- Main Content -->
     <main class="main-content">
-      <!-- Form Section -->
       <section class="form-section">
         <h2>📝 Book Details</h2>
         <form id="bookForm" class="book-form">
-          <!-- Skill Level -->
+          <!-- Skill — options populated from SKILLS in data.js -->
           <div class="form-group">
             <label for="skillLevel">
               <span class="label-icon">🎯</span>
@@ -30,38 +28,21 @@
             </label>
             <select id="skillLevel" name="skillLevel" required>
               <option value="">-- Choose a skill --</option>
-              <option value="cvc">CVC Words (Consonant-Vowel-Consonant)</option>
-              <option value="cvvc">CVVC Words</option>
-              <option value="cvce">CVCe Words (Magic e)</option>
-              <option value="digraphs">Digraphs (sh, ch, th, wh, ph)</option>
-              <option value="blends">Consonant Blends (bl, cl, fl, gl, pl, tr, dr, pr, br)</option>
-              <option value="short-vowels">Short Vowel Review</option>
-              <option value="long-vowels">Long Vowel Review</option>
             </select>
           </div>
 
-          <!-- Narrow Skill / Vowel -->
+          <!-- Narrow skill — options depend on the skill chosen above -->
           <div class="form-group">
             <label for="narrowSkill">
               <span class="label-icon">🔤</span>
-              Narrow Skill (Vowel Focus)
+              <span id="narrowSkillLabel">Narrow Skill</span>
             </label>
-            <select id="narrowSkill" name="narrowSkill" required>
-              <option value="">-- Choose a vowel --</option>
-              <option value="a">Short A (at, an, ap)</option>
-              <option value="e">Short E (ed, eg, el, em, en)</option>
-              <option value="i">Short I (it, in, ig, ip)</option>
-              <option value="o">Short O (op, ot, on, og)</option>
-              <option value="u">Short U (up, un, ug, ub)</option>
-              <option value="a-long">Long A (a_e, ai, ay)</option>
-              <option value="e-long">Long E (e_e, ea, ee, ey)</option>
-              <option value="i-long">Long I (i_e, ie, igh, y)</option>
-              <option value="o-long">Long O (o_e, oa, ow)</option>
-              <option value="u-long">Long U (u_e, ew, ou)</option>
+            <select id="narrowSkill" name="narrowSkill" required disabled>
+              <option value="">-- Choose a skill first --</option>
             </select>
           </div>
 
-          <!-- Book Selection -->
+          <!-- Book template — options populated from BOOK_TEMPLATES -->
           <div class="form-group">
             <label for="bookSelect">
               <span class="label-icon">📖</span>
@@ -69,14 +50,9 @@
             </label>
             <select id="bookSelect" name="bookSelect" required>
               <option value="">-- Choose a book --</option>
-              <option value="mini-book">Mini Book (8 pages)</option>
-              <option value="foldable">Foldable Booklet (4 pages)</option>
-              <option value="flip-book">Flip Book (6 pages)</option>
-              <option value="accordion">Accordion Book (10 pages)</option>
             </select>
           </div>
 
-          <!-- Student Name -->
           <div class="form-group">
             <label for="studentName">
               <span class="label-icon">✏️</span>
@@ -85,8 +61,7 @@
             <input type="text" id="studentName" name="studentName" placeholder="Enter student's name" required>
           </div>
 
-          <!-- Pronouns -->
-          <div class="form-group">
+          <div class="form-group form-group-wide">
             <label for="pronouns">
               <span class="label-icon">💬</span>
               Student Pronouns (optional)
@@ -99,9 +74,12 @@
               <option value="he/they">he/they</option>
               <option value="she/they">she/they</option>
             </select>
+            <p class="field-note">Not printed on the book yet — reserved for personalising the sentences.</p>
           </div>
 
-          <!-- Buttons -->
+          <!-- Errors and confirmations land here instead of in an alert() -->
+          <div id="formStatus" class="form-status" role="status" aria-live="polite"></div>
+
           <div class="form-actions">
             <button type="button" id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
             <button type="button" id="printBtn" class="btn btn-primary">🖨️ Print Book</button>
@@ -110,9 +88,27 @@
         </form>
       </section>
 
-      <!-- Preview Section -->
-      <section class="preview-section" id="previewSection" style="display: none;">
+      <section class="preview-section" id="previewSection" hidden>
         <h2>📖 Book Preview</h2>
+
+        <div class="print-instructions">
+          <h3>How to print &amp; fold</h3>
+          <ol>
+            <li>Print <strong>double-sided</strong>, flipping on the <strong>short edge</strong>.</li>
+            <li>Choose <strong>Landscape</strong>, Letter paper, and turn <strong>off</strong> headers &amp; footers.</li>
+            <li>Set scale to <strong>100%</strong> (not "Fit to page").</li>
+            <li>Stack the sheets in order, fold the whole stack in half along the dotted line, and staple the spine.</li>
+          </ol>
+          <p class="instructions-note">
+            Sheets below are shown in printing order, not reading order — that is
+            expected. Each sheet's front and back are labelled.
+          </p>
+          <p class="instructions-note">
+            Print one sheet first to check. Drivers label duplex differently: if
+            the back comes out upside-down, switch to <strong>long edge</strong>.
+          </p>
+        </div>
+
         <div id="bookPreview" class="book-preview"></div>
         <div class="preview-actions">
           <button type="button" id="printPreviewBtn" class="btn btn-primary">🖨️ Print This Book</button>
@@ -120,7 +116,6 @@
       </section>
     </main>
 
-    <!-- Footer -->
     <footer class="app-footer">
       <p>Made with ❤️ for amazing teachers</p>
     </footer>
