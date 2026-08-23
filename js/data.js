@@ -1,137 +1,193 @@
-// ===== Decodable Word Lists =====
+// ===== Decodable Book Content =====
 //
-// Each entry is one book's worth of content:
-//   title     — the story title printed on the cover
-//   label     — the phonics skill, shown as a subtitle (teacher-facing)
-//   words     — the decodable word list, distributed across the content pages
-//   sentences — connected text; one is chosen per content page
+// Each entry is one book:
+//   title         — story title, printed on the cover
+//   label         — phonics skill, shown small on the cover (teacher-facing)
+//   practiceWords — the word list printed on the BACK page for practice.
+//                   Kept as a coherent set for the skill; printed alphabetically.
+//   story         — connected text, ONE sentence per interior page.
 //
-// NOTE: several of these lists still need a pedagogical pass (see README).
-// Known problems: 'cvce-e' contains no long-E words, 'cvce-a' and 'cvce-o'
-// mix in other vowel sounds. Content correctness is tracked separately from
-// the generator logic.
+// Interior pages show the story only — no word lists, no boxes — so a book
+// needs as many story sentences as it has content pages:
+//   Foldable 2 · Flip Book 4 · Mini Book 6 · Longer Book 10
+// Stories are written to 10 sentences so the Longer Book fills exactly; shorter
+// templates use the first N and the app warns that the story is truncated.
+//
+// !! The story text below still needs a teacher's review pass against your
+// !! scope and sequence. It is decodable-by-pattern plus common sight words,
+// !! but it has not been checked against a specific curriculum.
 const WORD_DATA = {
-  // --- CVC Words: Short Vowels ---
+  // --- CVC: Short Vowels ---
   'cvc-a': {
     title: 'The Cat',
     label: 'CVC Words — Short A',
-    words: ['cat', 'sat', 'hat', 'mat', 'bat', 'rat', 'fat', 'pat', 'jam', 'tap'],
-    sentences: [
-      'The cat sat on the mat.',
-      'Pat has a fat cat.',
-      'The cat has a hat.',
-      'Jam is on the mat.',
-      'The rat ran past the cat.'
+    practiceWords: ['at', 'bat', 'cat', 'fat', 'hat', 'mat', 'pat', 'rat', 'sat', 'vat'],
+    story: [
+      'My cat is fat.',
+      'My fat cat sat on a mat.',
+      'A rat ran in.',
+      'The rat sat in a hat.',
+      'My cat saw the rat.',
+      'The cat ran at the rat.',
+      'The rat ran and ran.',
+      'The rat hid in a vat.',
+      'My cat can not get the rat.',
+      'I pat my fat cat.'
     ]
   },
   'cvc-e': {
     title: 'The Red Hen',
     label: 'CVC Words — Short E',
-    words: ['bed', 'red', 'fed', 'led', 'peg', 'leg', 'men', 'pen', 'ten', 'hen'],
-    sentences: [
-      'The hen is red.',
+    practiceWords: ['bed', 'fed', 'hen', 'led', 'leg', 'men', 'peg', 'pen', 'red', 'ten'],
+    story: [
+      'I have a red hen.',
+      'My hen is in a pen.',
+      'A peg is on the pen.',
+      'Ten men fed my hen.',
+      'The men led my hen out.',
+      'My hen has one red leg.',
+      'My hen ran to my bed.',
       'The hen sat on the bed.',
-      'Ten men fed the hen.',
-      'The hen led the men.',
-      'The red hen is in the pen.'
+      'Ten men fed her again.',
+      'I love my red hen.'
     ]
   },
   'cvc-i': {
     title: 'The Big Pit',
     label: 'CVC Words — Short I',
-    words: ['sit', 'pit', 'bit', 'fit', 'hit', 'kit', 'lid', 'pin', 'win', 'fin'],
-    sentences: [
-      'The kit is in the pit.',
-      'A pin can fit in the kit.',
-      'Sit and dig the pit.',
-      'The lid is on the kit.',
-      'Did the fin fit in the pit?'
+    practiceWords: ['bit', 'dig', 'fin', 'fit', 'hit', 'kit', 'lid', 'pin', 'pit', 'sit'],
+    story: [
+      'Tim can dig.',
+      'Tim has a big kit.',
+      'Tim will dig a pit.',
+      'Tim dug a big pit.',
+      'A pin fell in the pit.',
+      'The lid fell in too.',
+      'Tim can not fit in the pit.',
+      'Tim sat by the pit.',
+      'Tim got the pin and the lid.',
+      'Now Tim can sit and rest.'
     ]
   },
   'cvc-o': {
     title: 'The Hot Pot',
     label: 'CVC Words — Short O',
-    words: ['hot', 'dot', 'pot', 'not', 'top', 'cop', 'log', 'fog', 'hog', 'bog'],
-    sentences: [
-      'The pot is hot.',
-      'The pot is on top of the log.',
-      'A hog sat on the log.',
-      'Fog is on the bog.',
-      'Do not tip the hot pot.'
+    practiceWords: ['cot', 'dot', 'got', 'hop', 'hot', 'jog', 'log', 'mop', 'not', 'pot'],
+    story: [
+      'Tom will jog.',
+      'Tom can jog a lot.',
+      'Now Tom is hot.',
+      'Tom sat on a log.',
+      'Mom has a pot.',
+      'The pot is hot too.',
+      'Do not tip the pot!',
+      'A dot fell on the cot.',
+      'Tom got a mop.',
+      'Tom can mop it up.'
     ]
   },
   'cvc-u': {
     title: 'Fun in the Sun',
     label: 'CVC Words — Short U',
-    words: ['cup', 'fun', 'sun', 'run', 'mug', 'hut', 'nut', 'but', 'mud', 'bud'],
-    sentences: [
+    practiceWords: ['bug', 'bun', 'cup', 'cut', 'fun', 'hug', 'mud', 'run', 'sun', 'up'],
+    story: [
       'The sun is up.',
-      'Run to the hut in the sun.',
       'It is fun in the sun.',
-      'A nut is in the cup.',
-      'Bud has mud on him.'
+      'Gus can run and run.',
+      'A bug sat on a bun.',
+      'Gus got the bun.',
+      'The bug ran off.',
+      'Gus fell in the mud.',
+      'Mud is on his cup.',
+      'Mom will hug Gus.',
+      'The sun and Gus had fun.'
     ]
   },
 
-  // --- CVCe Words: Magic e ---
+  // --- CVCe: Magic e ---
   'cvce-a': {
     title: 'Cake at the Lake',
     label: 'CVCe Words — Long A',
-    words: ['cake', 'make', 'rake', 'lake', 'bake', 'take', 'tape', 'game', 'name', 'gate'],
-    sentences: [
-      'We make a cake.',
-      'Take the cake to the lake.',
-      'I rake by the gate.',
-      'We bake and play a game.',
-      'Tape your name on the cake.'
+    practiceWords: ['bake', 'cake', 'game', 'gate', 'lake', 'make', 'name', 'rake', 'take', 'tape'],
+    story: [
+      'We will make a cake.',
+      'We bake the cake.',
+      'I tape my name on the cake.',
+      'We take the cake to the lake.',
+      'The gate to the lake is shut.',
+      'Dad will rake by the gate.',
+      'Dad can open the gate.',
+      'We play a game at the lake.',
+      'Then we eat the cake.',
+      'What a fun day at the lake!'
     ]
   },
   'cvce-e': {
     title: 'Hope and the Rope',
     label: 'CVCe Words — Long O and Long A',
-    words: ['hope', 'rope', 'robe', 'haze', 'maze', 'cage', 'page', 'lobe', 'cope', 'mope'],
-    sentences: [
-      'Hope has a rope.',
-      'The rope is in the maze.',
-      'A page fell in the cage.',
-      'Hope put on her robe.',
-      'I hope the haze goes away.'
+    practiceWords: ['cage', 'cope', 'haze', 'hope', 'lobe', 'maze', 'mope', 'page', 'robe', 'rope'],
+    story: [
+      'Hope has a long rope.',
+      'Hope put on a robe.',
+      'Hope ran to a maze.',
+      'A haze fell on the maze.',
+      'Hope did not mope.',
+      'Hope read a page of a map.',
+      'The page shows the way.',
+      'Hope tied the rope to a gate.',
+      'The rope led Hope out.',
+      'Hope can cope with a maze!'
     ]
   },
   'cvce-i': {
     title: 'Nine Limes',
     label: 'CVCe Words — Long I',
-    words: ['time', 'dime', 'lime', 'mime', 'fine', 'line', 'mine', 'pine', 'nine', 'ride'],
-    sentences: [
-      'Nine limes are mine.',
-      'A dime is fine.',
-      'The limes are in a line.',
+    practiceWords: ['dime', 'fine', 'hide', 'line', 'lime', 'mine', 'nine', 'pine', 'ride', 'time'],
+    story: [
+      'I have nine limes.',
+      'The limes are mine.',
+      'I put them in a line.',
       'It is time for a ride.',
-      'The mime sat by the pine.'
+      'I ride to the pine tree.',
+      'I hide the limes by the pine.',
+      'A dime fell by my feet.',
+      'I got the dime. It is fine.',
+      'Now it is time to go.',
+      'Nine limes and one dime are mine!'
     ]
   },
   'cvce-o': {
     title: 'The Bone at Home',
     label: 'CVCe Words — Long O',
-    words: ['home', 'rope', 'dome', 'lone', 'bone', 'cone', 'tone', 'zone', 'hole', 'note'],
-    sentences: [
+    practiceWords: ['bone', 'cone', 'dome', 'hole', 'home', 'lone', 'nose', 'note', 'rope', 'tone'],
+    story: [
+      'My dog has a bone.',
       'The bone is at home.',
-      'A lone cone is in the hole.',
-      'The rope is by the dome.',
-      'I wrote a note at home.',
-      'The bone rolled into the zone.'
+      'My dog dug a hole.',
+      'My dog put the bone in the hole.',
+      'A lone cone fell by the hole.',
+      'My dog put his nose in the hole.',
+      'I wrote a note for my dog.',
+      'The note says the bone is his.',
+      'My dog will not go home.',
+      'I use a rope to lead him home.'
     ]
   },
   'cvce-u': {
     title: 'The Cute Cube',
     label: 'CVCe Words — Long U',
-    words: ['cube', 'tube', 'mute', 'rude', 'cute', 'dune', 'tune', 'huge', 'June', 'use'],
-    sentences: [
+    practiceWords: ['cube', 'cute', 'dune', 'huge', 'June', 'mule', 'rude', 'tube', 'tune', 'use'],
+    story: [
+      'In June I got a cube.',
       'The cube is cute.',
-      'A tube is on the dune.',
-      'I use a huge cube.',
-      'Do not be rude.',
-      'In June we hum a tune.'
+      'I use the cube a lot.',
+      'My mule likes the cube.',
+      'My mule is huge.',
+      'My mule is never rude.',
+      'We go to a huge dune.',
+      'I hum a tune on the dune.',
+      'My mule hums the tune too.',
+      'June on the dune is fun!'
     ]
   },
 
@@ -139,37 +195,52 @@ const WORD_DATA = {
   'digraph-sh': {
     title: 'The Fish and the Ship',
     label: 'Digraphs — sh',
-    words: ['ship', 'shop', 'shell', 'shed', 'wish', 'fish', 'dish', 'rush', 'push', 'cash'],
-    sentences: [
-      'The fish is on the ship.',
-      'I wish for a dish of fish.',
-      'Push the cart to the shop.',
-      'A shell is in the shed.',
-      'We rush to the ship.'
+    practiceWords: ['cash', 'dish', 'fish', 'push', 'rush', 'shed', 'shell', 'ship', 'shop', 'wish'],
+    story: [
+      'I wish for a fish.',
+      'I rush to the shop.',
+      'The shop has a big fish.',
+      'But I have no cash.',
+      'I push my cart to the shed.',
+      'In the shed is a ship.',
+      'I put a shell on the ship.',
+      'I put a dish on the ship.',
+      'My ship is in no rush.',
+      'I wish my ship had a fish!'
     ]
   },
   'digraph-ch': {
     title: 'Chop the Chips',
     label: 'Digraphs — ch',
-    words: ['chip', 'chop', 'chin', 'chat', 'chill', 'rich', 'inch', 'much', 'such', 'chest'],
-    sentences: [
-      'Chop the chips.',
-      'A chip is on my chin.',
+    practiceWords: ['chat', 'check', 'chest', 'chin', 'chip', 'chop', 'inch', 'much', 'rich', 'such'],
+    story: [
+      'Mom will chop chips.',
+      'I help. I chop one inch.',
+      'A chip fell on my chin.',
+      'Mom and I chat.',
       'We chat much too long.',
-      'The chest is one inch wide.',
-      'Such a rich chip!'
+      'The chips are in the chest.',
+      'Check the chest!',
+      'The chips are gone.',
+      'Such rich chips!',
+      'We will chop much more.'
     ]
   },
   'digraph-th': {
     title: 'The Moth on the Path',
     label: 'Digraphs — th',
-    words: ['this', 'that', 'then', 'them', 'with', 'bath', 'math', 'path', 'moth', 'thin'],
-    sentences: [
-      'A moth is on the path.',
+    practiceWords: ['bath', 'math', 'moth', 'path', 'that', 'them', 'then', 'thin', 'this', 'with'],
+    story: [
+      'A moth sat on the path.',
       'This moth is thin.',
-      'I do math with them.',
-      'Then we take a bath.',
-      'That path is long.'
+      'Beth is with me.',
+      'Beth and I look at them.',
+      'Then the moth went up.',
+      'That moth is fast!',
+      'We run on the path.',
+      'Then we go do math.',
+      'After math, Beth had a bath.',
+      'This was a fun day with Beth.'
     ]
   },
 
@@ -177,126 +248,168 @@ const WORD_DATA = {
   'blend-bl': {
     title: 'The Black Block',
     label: 'Blends — bl',
-    words: ['black', 'block', 'blot', 'blast', 'bled', 'bless', 'blend', 'bliss', 'blink', 'blimp'],
-    sentences: [
-      'The block is black.',
-      'I blink at the black blimp.',
-      'Blend the black and the red.',
-      'A blot is on the block.',
-      'The blast was loud.'
+    practiceWords: ['black', 'blank', 'blast', 'bled', 'blend', 'blimp', 'blink', 'block', 'blot', 'blush'],
+    story: [
+      'I have a black block.',
+      'The block is big.',
+      'I blink at the black block.',
+      'I blend it with a red block.',
+      'A blimp went past.',
+      'The blimp is black too.',
+      'A blot of ink fell on my block.',
+      'My page is not blank now.',
+      'The blimp gave a blast.',
+      'I blink and the blimp is gone.'
     ]
   },
   'blend-cl': {
     title: 'Clean the Clock',
     label: 'Blends — cl',
-    words: ['clock', 'clap', 'clip', 'clot', 'club', 'cluck', 'clump', 'clung', 'cliff', 'clam'],
-    sentences: [
-      'Clean the clock.',
-      'We clap at the club.',
-      'A clip is on the clock.',
-      'The clam clung to the cliff.',
-      'The hens cluck in a clump.'
+    practiceWords: ['clam', 'clap', 'clean', 'cliff', 'clip', 'clock', 'club', 'cluck', 'clump', 'clung'],
+    story: [
+      'Our club has a clock.',
+      'The clock is not clean.',
+      'I clip a rag on a stick.',
+      'I clean the clock.',
+      'We all clap!',
+      'A clam clung to the cliff.',
+      'A clump of moss is on the cliff.',
+      'The hens cluck at the clam.',
+      'We clap for the hens.',
+      'Now the clock is clean.'
     ]
   },
   'blend-fl': {
     title: 'The Flag',
     label: 'Blends — fl',
-    words: ['flag', 'flat', 'flip', 'flap', 'flock', 'fling', 'flint', 'fluff', 'flush', 'fled'],
-    sentences: [
+    practiceWords: ['flag', 'flap', 'flat', 'fled', 'fling', 'flint', 'flip', 'flock', 'fluff', 'flush'],
+    story: [
+      'We have a flag.',
       'The flag is flat.',
-      'The flag will flap.',
+      'The wind will make it flap.',
+      'The flag flaps in the wind.',
       'A flock of birds fled.',
-      'Flip the flat flint.',
-      'Fluff is on the flag.'
+      'I flip the flag over.',
+      'Fluff is on the flag.',
+      'I fling the fluff off.',
+      'Now the flag can flap again.',
+      'Our flag is not flat now.'
     ]
   },
   'blend-pl': {
     title: 'The Plan',
     label: 'Blends — pl',
-    words: ['plan', 'plant', 'plum', 'plus', 'plug', 'plop', 'plank', 'plot', 'pluck', 'plush'],
-    sentences: [
+    practiceWords: ['plan', 'plank', 'plant', 'plop', 'pluck', 'plug', 'plum', 'plump', 'plus', 'plush'],
+    story: [
       'We have a plan.',
       'The plan is to plant a plum tree.',
-      'Plug in the lamp.',
-      'A plum went plop on the plank.',
-      'Pluck the plum from the plant.'
+      'We plug in the lamp.',
+      'We dig by the plank.',
+      'We plant the plum tree.',
+      'A plump plum fell: plop!',
+      'I pluck the plum.',
+      'Plus, I got two more.',
+      'Our plan went well.',
+      'The plum tree was a good plan.'
     ]
   },
   'blend-tr': {
     title: 'The Truck and the Tree',
     label: 'Blends — tr',
-    words: ['trap', 'tram', 'trim', 'trip', 'tree', 'trot', 'tray', 'track', 'truck', 'trunk'],
-    sentences: [
-      'The truck is by the tree.',
+    practiceWords: ['track', 'tram', 'trap', 'tray', 'tree', 'trim', 'trip', 'trot', 'truck', 'trunk'],
+    story: [
+      'My truck is by the tree.',
+      'The tree has a big trunk.',
+      'We go on a trip.',
       'We trot down the track.',
-      'The tram is on a trip.',
-      'A tray is in the truck.',
-      'Trim the tree.'
+      'A tram is on the track too.',
+      'I have a tray in my truck.',
+      'We stop to trim the tree.',
+      'My truck can not fit on the track.',
+      'We set a trap for the bug.',
+      'The trip in my truck was fun.'
     ]
   },
   'blend-dr': {
     title: 'The Drum',
     label: 'Blends — dr',
-    words: ['drum', 'drop', 'drip', 'dress', 'draw', 'drag', 'drank', 'drill', 'drift', 'dry'],
-    sentences: [
+    practiceWords: ['drag', 'drank', 'draw', 'dress', 'drift', 'drill', 'drip', 'drop', 'drum', 'dry'],
+    story: [
+      'I have a drum.',
       'I hit the drum.',
       'A drop of rain fell.',
-      'Draw a drum on the pad.',
-      'The dress is dry.',
-      'Drag the drum to the drill.'
+      'Drip, drip, drop!',
+      'My dress is not dry.',
+      'I drag the drum in.',
+      'I draw a drum on my pad.',
+      'Dad has a drill.',
+      'Dad will drill and I will drum.',
+      'Now my dress is dry.'
     ]
   },
   'blend-pr': {
     title: 'The Prize',
     label: 'Blends — pr',
-    words: ['press', 'print', 'prize', 'pride', 'prism', 'probe', 'prone', 'prop', 'prim', 'prod'],
-    sentences: [
-      'I won a prize.',
-      'Press to print the prize list.',
-      'She has pride in the prize.',
-      'A prism is by the prop.',
-      'Do not prod the prism.'
+    practiceWords: ['prank', 'prep', 'press', 'pride', 'prim', 'print', 'prize', 'probe', 'prod', 'prop'],
+    story: [
+      'I won a prize!',
+      'I have pride in my prize.',
+      'I press the pad to print.',
+      'I print my prize list.',
+      'I prop the list on my desk.',
+      'Dad will prod me to go.',
+      'We prep for the trip.',
+      'I do not play a prank.',
+      'My prize is a prim red box.',
+      'I press my prize to me.'
     ]
   },
   'blend-br': {
     title: 'Bring the Bread',
     label: 'Blends — br',
-    words: ['bring', 'bread', 'brave', 'brand', 'brass', 'brick', 'branch', 'brush', 'brim', 'brag'],
-    sentences: [
-      'Bring the bread.',
-      'The brave kid ran.',
-      'A brass brick is by the brush.',
-      'Brush the crumbs from the bread.',
-      'Do not brag.'
+    practiceWords: ['brag', 'branch', 'brand', 'brass', 'brave', 'bread', 'brick', 'brim', 'bring', 'brush'],
+    story: [
+      'I will bring the bread.',
+      'The bread is in a brass pan.',
+      'A brave bird sat on a branch.',
+      'The bird wants my bread.',
+      'I brush the crumbs off.',
+      'The crumbs fell on a brick.',
+      'The bird got the crumbs.',
+      'I do not brag.',
+      'My cup is full to the brim.',
+      'I bring the bread in.'
     ]
   }
 };
 
 // ===== Review books: composed from the lists above =====
-// Pulls the first `wordsPer` words and `sentencesPer` sentences from each source
-// so a review book samples every vowel without introducing new content.
+// Samples every source so a review book covers all five vowels. The story is a
+// set of related sentences rather than one narrative — flagged for review.
 function buildReviewBook(key, title, label, sourceKeys, wordsPer, sentencesPer) {
-  const words = [];
-  const sentences = [];
+  const practiceWords = [];
+  const story = [];
   sourceKeys.forEach((sourceKey) => {
     const source = WORD_DATA[sourceKey];
     if (!source) return;
-    // Take the first `wordsPer` words this book does not already have, so a
-    // word shared between two source lists doesn't appear twice.
-    const picked = source.words.filter((w) => !words.includes(w)).slice(0, wordsPer);
-    words.push(...picked);
-    sentences.push(...source.sentences.slice(0, sentencesPer));
+    // Skip a word this book already has, so a word shared between two source
+    // lists doesn't appear twice.
+    const picked = source.practiceWords
+      .filter((w) => !practiceWords.includes(w))
+      .slice(0, wordsPer);
+    practiceWords.push(...picked);
+    story.push(...source.story.slice(0, sentencesPer));
   });
-  WORD_DATA[key] = { title, label, words, sentences };
+  WORD_DATA[key] = { title, label, practiceWords, story };
 }
 
 buildReviewBook(
   'review-short', 'Words I Know', 'Short Vowel Review — a, e, i, o, u',
-  ['cvc-a', 'cvc-e', 'cvc-i', 'cvc-o', 'cvc-u'], 2, 1
+  ['cvc-a', 'cvc-e', 'cvc-i', 'cvc-o', 'cvc-u'], 2, 2
 );
 buildReviewBook(
   'review-long', 'More Words I Know', 'Long Vowel Review — a, e, i, o, u',
-  ['cvce-a', 'cvce-e', 'cvce-i', 'cvce-o', 'cvce-u'], 2, 1
+  ['cvce-a', 'cvce-e', 'cvce-i', 'cvce-o', 'cvce-u'], 2, 2
 );
 
 // ===== Skills =====
@@ -377,30 +490,23 @@ const SKILLS = {
 // inserted before the back cover.
 const BOOK_TEMPLATES = {
   'mini-book': {
-    name: 'Mini Book (8 pages)',
-    description: 'A classic 8-page mini book that folds and staples',
+    name: 'Mini Book (8 pages, 6 story pages)',
     pageOrder: ['cover', 'page1', 'page2', 'page3', 'page4', 'page5', 'page6', 'back']
   },
   'foldable': {
-    name: 'Foldable Booklet (4 pages)',
-    description: 'A simple 4-page foldable booklet',
+    name: 'Foldable Booklet (4 pages, 2 story pages)',
     pageOrder: ['cover', 'page1', 'page2', 'back']
   },
   'flip-book': {
-    name: 'Flip Book (6 pages)',
-    description: 'A flip-book with 6 pages',
+    name: 'Flip Book (6 pages, 4 story pages)',
     pageOrder: ['cover', 'page1', 'page2', 'page3', 'page4', 'back']
   },
   'accordion': {
-    name: 'Longer Book (12 pages)',
-    description: 'An extended book with 10 content pages',
+    name: 'Longer Book (12 pages, 10 story pages)',
     pageOrder: ['cover', 'page1', 'page2', 'page3', 'page4', 'page5',
                 'page6', 'page7', 'page8', 'page9', 'page10', 'back']
   }
 };
 
 // ===== Decorative Icons =====
-const PAGE_ICONS = {
-  'cover': '📚',
-  'back': '🎉'
-};
+const PAGE_ICONS = { 'cover': '📚' };

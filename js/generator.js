@@ -20,7 +20,7 @@ const BookGenerator = {
 
     const data = WORD_DATA[option.key];
     if (!data) {
-      return { ok: false, error: `No word list found for "${option.label}" (${option.key}).` };
+      return { ok: false, error: `No content found for "${option.label}" (${option.key}).` };
     }
 
     const template = BOOK_TEMPLATES[bookTemplate];
@@ -34,26 +34,24 @@ const BookGenerator = {
 
     // Saddle-stitch needs a page count divisible by 4; pad with blanks.
     const pageOrder = this.padToSheetMultiple(template.pageOrder);
-    const contentSlots = pageOrder.filter((t) => t.startsWith('page')).length;
-    const wordGroups = this.chunkEvenly(data.words, contentSlots);
-    const pageSentences = this.assignSentences(data.sentences, wordGroups);
+    const storySlots = pageOrder.filter((t) => t.startsWith('page')).length;
 
-    let contentIndex = 0;
-    const pages = pageOrder.map((pageType, index) => {
+    // One story sentence per interior page. A template with more pages than the
+    // story has sentences leaves the extra pages as illustration-only.
+    let storyIndex = 0;
+    const pages = pageOrder.map((pageType) => {
       if (pageType.startsWith('page')) {
-        const html = this.createContentPage(
-          contentIndex, wordGroups[contentIndex], pageSentences[contentIndex], data
-        );
-        contentIndex += 1;
-        return this.wrapPage(html, pageType, `Page ${index}`, '');
+        const sentence = data.story[storyIndex];
+        storyIndex += 1;
+        return this.wrapPage(this.createStoryPage(sentence), pageType, 'story');
       }
       if (pageType === 'cover') {
-        return this.wrapPage(this.createCoverPage(data, studentName), pageType, 'Cover', 'cover');
+        return this.wrapPage(this.createCoverPage(data, studentName), pageType, 'cover');
       }
       if (pageType === 'back') {
-        return this.wrapPage(this.createBackPage(studentName), pageType, 'Back Cover', 'back');
+        return this.wrapPage(this.createBackPage(data), pageType, 'back');
       }
-      return this.wrapPage('', pageType, '', 'blank');
+      return this.wrapPage('', pageType, 'blank');
     });
 
     return {
@@ -66,8 +64,29 @@ const BookGenerator = {
       pronouns,
       skillLevel,
       narrowSkill,
-      bookKey: option.key
+      bookKey: option.key,
+      storySlots,
+      storyUsed: Math.min(storySlots, data.story.length),
+      storyLength: data.story.length,
+      warning: this.storyFitWarning(data, storySlots, template)
     };
+  },
+
+  /**
+   * Tell the teacher when the chosen template doesn't match the story length,
+   * rather than silently cutting the story short or leaving pages empty.
+   */
+  storyFitWarning(data, storySlots, template) {
+    if (data.story.length > storySlots) {
+      return `Only the first ${storySlots} of ${data.story.length} story sentences fit this template. ` +
+             `Choose "${BOOK_TEMPLATES.accordion.name}" for the whole story.`;
+    }
+    if (data.story.length < storySlots) {
+      const spare = storySlots - data.story.length;
+      return `This story has ${data.story.length} sentences but the template has ${storySlots} story pages — ` +
+             `the last ${spare} will be illustration-only.`;
+    }
+    return null;
   },
 
   /**
@@ -97,72 +116,12 @@ const BookGenerator = {
     return order;
   },
 
-  /**
-   * Split `items` into `buckets` contiguous groups of near-equal size.
-   * Never returns an empty group — that was producing blank pages in the
-   * mini-book (page 6) and the long book (pages 6-8).
-   */
-  chunkEvenly(items, buckets) {
-    if (buckets <= 0) return [];
-    if (!items.length) return Array.from({ length: buckets }, () => []);
-
-    const source = items.slice();
-    // Fewer words than pages: cycle the list so every page still has words.
-    while (source.length < buckets) {
-      source.push(items[source.length % items.length]);
-    }
-
-    const base = Math.floor(source.length / buckets);
-    const extra = source.length % buckets;
-    const groups = [];
-    let cursor = 0;
-    for (let b = 0; b < buckets; b++) {
-      const size = base + (b < extra ? 1 : 0);
-      groups.push(source.slice(cursor, cursor + size));
-      cursor += size;
-    }
-    return groups;
+  wrapPage(content, pageType, extraClass) {
+    return `<div class="book-page ${extraClass}" data-page-type="${pageType}">${content}</div>`;
   },
 
   /**
-   * Pair each page's word group with the sentence that actually uses the most
-   * of those words, preferring sentences not yet used elsewhere in the book.
-   */
-  assignSentences(sentences, wordGroups) {
-    if (!sentences.length) return wordGroups.map(() => '');
-
-    const used = new Set();
-    return wordGroups.map((group) => {
-      const groupWords = group.map((w) => w.toLowerCase());
-      let bestIndex = 0;
-      let bestScore = -Infinity;
-
-      sentences.forEach((sentence, i) => {
-        const tokens = sentence.toLowerCase().match(/[a-z']+/g) || [];
-        let score = groupWords.filter((w) => tokens.includes(w)).length;
-        if (used.has(i)) score -= 0.5; // reuse only when nothing fresh fits better
-        if (score > bestScore) {
-          bestScore = score;
-          bestIndex = i;
-        }
-      });
-
-      used.add(bestIndex);
-      return sentences[bestIndex];
-    });
-  },
-
-  wrapPage(content, pageType, label, extraClass) {
-    return `
-      <div class="book-page ${extraClass}" data-page-type="${pageType}">
-        ${label ? `<div class="page-number">${label}</div>` : ''}
-        ${content}
-      </div>
-    `;
-  },
-
-  /**
-   * Cover page: story title, skill, and the student's name.
+   * Cover: story title, skill, and the student's name.
    */
   createCoverPage(data, studentName) {
     return `
@@ -173,42 +132,31 @@ const BookGenerator = {
     `;
   },
 
-  createBackPage(studentName) {
+  /**
+   * Interior page: open space for the student to illustrate, with one line of
+   * story underneath. No word lists, no boxes, no rules.
+   */
+  createStoryPage(sentence) {
     return `
-      <div class="cover-decoration">${PAGE_ICONS.back}</div>
-      <h3 class="back-heading">Great Reading!</h3>
-      <p class="back-line">I read my book all by myself!</p>
-      <p class="back-field"><span class="field-label">Student:</span>
-        <strong class="field-value">${this.escapeHtml(studentName)}</strong></p>
-      <p class="back-field"><span class="field-label">Date:</span>
-        <span class="write-line write-line-short"></span></p>
-      <div class="back-stars">⭐⭐⭐⭐⭐</div>
-      <p class="back-field"><span class="field-label">Teacher/Parent:</span>
-        <span class="write-line"></span></p>
-    `;
-  },
-
-  createContentPage(contentIndex, pageWords, sentence, data) {
-    const highlighted = this.highlightWordsInSentence(sentence, pageWords);
-    return `
-      <h3>${this.escapeHtml(data.label)}</h3>
-      <div class="word-list">
-        ${pageWords.map((w) => `<span class="word-chip">${this.escapeHtml(w)}</span>`).join('')}
-      </div>
-      <div class="sentence-box"><p>${highlighted}</p></div>
-      <p class="page-hint">Read the words, then read the sentence!</p>
+      <div class="illustration-space"></div>
+      ${sentence ? `<p class="story-text">${this.escapeHtml(sentence)}</p>` : ''}
     `;
   },
 
   /**
-   * Bold the page's target words where they appear in the sentence.
+   * Back page: the practice word list for this skill, alphabetised.
    */
-  highlightWordsInSentence(sentence, wordList) {
-    if (!sentence) return '';
-    const wordSet = new Set(wordList.map((w) => w.toLowerCase()));
-    return this.escapeHtml(sentence).replace(/\b([A-Za-z']+)\b/g, (match) => (
-      wordSet.has(match.toLowerCase()) ? `<span class="highlight">${match}</span>` : match
-    ));
+  createBackPage(data) {
+    const words = data.practiceWords
+      .slice()
+      .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+
+    return `
+      <h3 class="practice-heading">Words to Practice</h3>
+      <ul class="practice-list">
+        ${words.map((w) => `<li>${this.escapeHtml(w)}</li>`).join('')}
+      </ul>
+    `;
   },
 
   /**

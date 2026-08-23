@@ -52,9 +52,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ===== Status messages =====
 
-  function setStatus(message, kind) {
-    statusEl.textContent = message || '';
-    statusEl.className = message ? `form-status form-status-${kind}` : 'form-status';
+  function setStatus(message, kind, note) {
+    statusEl.innerHTML = '';
+    if (!message) {
+      statusEl.className = 'form-status';
+      return;
+    }
+    statusEl.className = `form-status form-status-${kind}`;
+    statusEl.appendChild(document.createTextNode(message));
+    if (note) {
+      const span = document.createElement('span');
+      span.className = 'status-note';
+      span.textContent = note;
+      statusEl.appendChild(span);
+    }
   }
 
   function clearStatus() {
@@ -89,12 +100,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     bookPreview.innerHTML = BookGenerator.generatePrintHTML(result);
     previewSection.hidden = false;
-    const sheets = result.pages.length / 2;
-    setStatus(
+
+    const sheets = result.pages.length / 4;
+    const summary =
       `"${result.bookTitle}" for ${result.studentName} — ` +
-      `${result.pages.length} pages on ${sheets / 2} double-sided sheet${sheets / 2 === 1 ? '' : 's'}.`,
-      'success'
-    );
+      `${result.pages.length} pages on ${sheets} double-sided sheet${sheets === 1 ? '' : 's'}, ` +
+      `${result.storyUsed} story page${result.storyUsed === 1 ? '' : 's'}.`;
+
+    // A story that doesn't match the template is a content decision the teacher
+    // should see, not something to paper over.
+    setStatus(summary, result.warning ? 'warn' : 'success', result.warning);
     return result;
   }
 

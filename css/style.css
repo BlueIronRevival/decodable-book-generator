@@ -15,6 +15,8 @@
   --danger-bg: #FDEDEC;
   --success: #1E8449;
   --success-bg: #EAF7EF;
+  --warn: #8A6100;
+  --warn-bg: #FFF8E1;
   --bg: #F0F4F8;
   --bg-card: #FFFFFF;
   --text: #2C3E50;
@@ -91,14 +93,8 @@ body {
   gap: 20px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group-wide {
-  grid-column: 1 / -1;
-}
+.form-group { display: flex; flex-direction: column; }
+.form-group-wide { grid-column: 1 / -1; }
 
 .form-group label {
   font-family: var(--font-heading);
@@ -108,9 +104,7 @@ body {
   color: var(--text);
 }
 
-.label-icon {
-  margin-right: 6px;
-}
+.label-icon { margin-right: 6px; }
 
 .form-group select,
 .form-group input {
@@ -137,9 +131,7 @@ body {
   cursor: not-allowed;
 }
 
-.form-group input::placeholder {
-  color: var(--text-light);
-}
+.form-group input::placeholder { color: var(--text-light); }
 
 .field-note {
   font-size: 0.8rem;
@@ -148,16 +140,14 @@ body {
 }
 
 /* ===== Status messages ===== */
-.form-status {
-  grid-column: 1 / -1;
-  font-size: 0.95rem;
-  border-radius: var(--radius-sm);
-}
+.form-status { grid-column: 1 / -1; font-size: 0.95rem; }
 
 .form-status-error,
-.form-status-success {
+.form-status-success,
+.form-status-warn {
   padding: 10px 14px;
   border: 2px solid;
+  border-radius: var(--radius-sm);
 }
 
 .form-status-error {
@@ -172,6 +162,14 @@ body {
   background: var(--success-bg);
   border-color: var(--success);
 }
+
+.form-status-warn {
+  color: var(--warn);
+  background: var(--warn-bg);
+  border-color: #E0B860;
+}
+
+.status-note { display: block; margin-top: 4px; font-size: 0.88rem; }
 
 /* ===== Buttons ===== */
 .form-actions {
@@ -195,13 +193,8 @@ body {
   white-space: nowrap;
 }
 
-.btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
+.btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
 .btn:active { transform: translateY(0); }
-
 .btn-primary { background: var(--primary); color: white; }
 .btn-primary:hover { background: var(--primary-dark); }
 .btn-secondary { background: var(--secondary); color: white; }
@@ -225,17 +218,9 @@ body {
   color: var(--text);
 }
 
-.print-instructions ol {
-  margin: 0 0 8px 20px;
-  font-size: 0.95rem;
-}
-
+.print-instructions ol { margin: 0 0 8px 20px; font-size: 0.95rem; }
 .print-instructions li { margin-bottom: 4px; }
-
-.instructions-note {
-  font-size: 0.85rem;
-  color: var(--text-light);
-}
+.instructions-note { font-size: 0.85rem; color: var(--text-light); }
 
 /* ===== Preview ===== */
 .book-preview {
@@ -258,14 +243,16 @@ body {
   margin-bottom: 6px;
 }
 
+/* On screen only, a light frame shows where the paper edge is. The printed
+   sheet has no outline at all. */
 .sheet-body {
   display: flex;
   flex-direction: row;
   align-items: stretch;
   background: white;
-  border: 2px solid #BBB;
+  border: 1px solid var(--border);
   border-radius: 4px;
-  min-height: 320px;
+  min-height: 420px;
 }
 
 .print-page {
@@ -275,21 +262,23 @@ body {
   flex-direction: column;
 }
 
+/* Fold guide down the middle — the one line that stays, since the teacher
+   folds along it. */
 .fold-line {
   width: 2px;
   flex-shrink: 0;
   align-self: stretch;
   background: repeating-linear-gradient(
-    to bottom, #AAA 0, #AAA 6px, transparent 6px, transparent 12px
+    to bottom, #BBB 0, #BBB 6px, transparent 6px, transparent 12px
   );
 }
 
-/* ===== Book page content ===== */
+/* ===== Book pages ===== */
 .book-page {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 16px;
+  padding: 18px;
 }
 
 .book-page.cover,
@@ -297,66 +286,6 @@ body {
   text-align: center;
   align-items: center;
   justify-content: center;
-}
-
-.book-page .page-number {
-  font-size: 0.75rem;
-  color: var(--text-light);
-  text-align: right;
-  margin-bottom: 8px;
-  align-self: stretch;
-}
-
-.book-page h3 {
-  font-family: var(--font-heading);
-  font-size: 1.05rem;
-  color: var(--primary-dark);
-  margin-bottom: 10px;
-  text-align: center;
-}
-
-.word-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-  align-content: center;
-  flex: 1;
-}
-
-.word-chip {
-  border: 2px solid var(--primary-light);
-  border-radius: 6px;
-  padding: 8px 18px;
-  background: #F0F7FF;
-  font-family: var(--font-body);
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--text);
-}
-
-.sentence-box {
-  background: #FFF9E6;
-  border: 2px solid #F0D060;
-  border-radius: 8px;
-  padding: 12px 16px;
-  margin-top: 12px;
-  font-size: 1.3rem;
-  line-height: 1.7;
-  text-align: center;
-}
-
-.sentence-box .highlight {
-  color: var(--primary-dark);
-  font-weight: 700;
-}
-
-.page-hint {
-  margin-top: 10px;
-  text-align: center;
-  font-size: 0.8rem;
-  color: var(--text-light);
 }
 
 /* Cover */
@@ -370,11 +299,7 @@ body {
   line-height: 1.2;
 }
 
-.cover-skill {
-  font-size: 0.9rem;
-  color: var(--text-light);
-  margin-top: 8px;
-}
+.cover-skill { font-size: 0.9rem; color: var(--text-light); margin-top: 8px; }
 
 .student-name {
   font-size: 1.4rem;
@@ -383,22 +308,34 @@ body {
   margin-top: 20px;
 }
 
-/* Back cover */
-.back-heading { font-family: var(--font-heading); color: var(--primary-dark); font-size: 1.3rem; }
-.back-line { font-size: 1.1rem; margin: 10px 0; }
-.back-field { margin-top: 12px; font-size: 0.95rem; }
-.field-label { color: var(--text-light); }
-.field-value { color: var(--primary); }
-.back-stars { font-size: 1.6rem; margin-top: 14px; }
+/* Interior story page: open space to draw, one line of story beneath it. */
+.illustration-space { flex: 1 1 auto; min-height: 140px; }
 
-.write-line {
-  display: inline-block;
-  min-width: 160px;
-  border-bottom: 2px solid #333;
-  margin-left: 6px;
+.story-text {
+  flex: 0 0 auto;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  text-align: center;
+  padding-top: 12px;
 }
 
-.write-line-short { min-width: 110px; }
+/* Back page: practice word list */
+.practice-heading {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-light);
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.practice-list {
+  list-style: none;
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.75;
+  letter-spacing: 1px;
+}
 
 /* ===== Footer ===== */
 .app-footer {
@@ -429,10 +366,7 @@ body {
     margin: 0.4in;
   }
 
-  body {
-    background: white;
-    font-size: 12pt;
-  }
+  body { background: white; font-size: 12pt; }
 
   .app-header,
   .form-section,
@@ -440,8 +374,7 @@ body {
   .preview-actions,
   .print-instructions,
   .preview-section h2,
-  .sheet-label,
-  .page-number {
+  .sheet-label {
     display: none !important;
   }
 
@@ -478,42 +411,26 @@ body {
     height: 7.7in;
     border: none;
     border-radius: 0;
+    min-height: 0;
     break-inside: avoid;
     page-break-inside: avoid;
   }
 
+  /* No outline on the printed pages — only the fold guide. */
   .print-page {
-    border: 1px solid #999;
+    border: none;
     overflow: hidden;
   }
 
-  .print-page > .book-page { padding: 0.35in 0.4in; }
-
-  .print-page-left { border-right: none; }
-  .print-page-right { border-left: none; }
-
-  .fold-line {
-    background: repeating-linear-gradient(
-      to bottom, #999 0, #999 8px, transparent 8px, transparent 16px
-    );
-  }
+  .print-page > .book-page { padding: 0.4in 0.45in; }
 
   .book-page.cover { background: linear-gradient(135deg, #F2F8FD, #E4F1FC); }
 
-  .word-chip {
-    font-size: 24pt;
-    padding: 10px 22px;
-    border-color: #666;
-    background: #F5F5F5;
-  }
-
-  .sentence-box {
-    font-size: 15pt;
-    border-color: #888;
-    background: #FAFAFA;
-  }
-
   .cover-title { font-size: 30pt; }
   .student-name { font-size: 18pt; }
-  .book-page h3 { font-size: 12pt; }
+
+  .story-text { font-size: 20pt; padding-top: 0.2in; }
+
+  .practice-heading { font-size: 13pt; margin-bottom: 0.25in; }
+  .practice-list { font-size: 22pt; line-height: 1.7; }
 }

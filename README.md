@@ -4,20 +4,32 @@ A web application for teachers to create foldable, printable decodable reading b
 
 ## Features
 
-- **Skill Selection**: Choose from CVC words, digraphs, consonant blends, and more
-- **Vowel Focus**: Narrow down to specific vowel sounds (short a, long e, etc.)
-- **Multiple Book Formats**: Mini books, foldable booklets, flip books, and accordion books
-- **Student Personalization**: Add student name and pronouns to each book
-- **Print-Ready**: Generates clean, classroom-ready pages that can be folded and stapled
+- **Skill Selection**: CVC words, CVCe, digraphs, consonant blends, vowel review
+- **Narrow Focus**: The second menu is rebuilt from the skill you pick
+- **Multiple Book Formats**: 4, 6, 8 and 12 page booklets
+- **Print-Ready**: Landscape sheets imposed for double-sided printing and folding
+
+## Book anatomy
+
+| Page | Contains |
+|------|----------|
+| Cover | Story title, phonics skill, student name |
+| Interior pages | One line of story, with the rest of the page left open for the student to illustrate. No word lists, no boxes, no page outlines. |
+| Back page | The practice word list for the skill, alphabetised |
+
+Interior pages carry **one story sentence each**, so a book needs as many story
+sentences as it has story pages. Stories are written to 10 sentences, which
+exactly fills the Longer Book; shorter templates use the first N sentences and
+the app warns you that the story is truncated.
 
 ## Book Templates
 
-| Template | Pages | Content pages | Description |
-|----------|-------|---------------|-------------|
-| Mini Book | 8 | 6 | Classic foldable mini book |
-| Foldable Booklet | 4 | 2 | Simple 4-page booklet |
-| Flip Book | 6 -> 8 | 4 | Padded to 8 with 2 blank pages |
-| Longer Book | 12 | 10 | Extended book |
+| Template | Sheets | Pages | Story pages | Notes |
+|----------|--------|-------|-------------|-------|
+| Foldable Booklet | 1 | 4 | 2 | Uses the first 2 sentences |
+| Flip Book | 2 | 6 -> 8 | 4 | Padded to 8 with 2 blank pages |
+| Mini Book | 2 | 8 | 6 | Uses the first 6 sentences |
+| Longer Book | 3 | 12 | 10 | Fits the whole story |
 
 Saddle-stitch imposition requires a page count divisible by 4, so templates that
 aren't are padded with blank pages inserted before the back cover.
@@ -38,17 +50,20 @@ so every combination the UI offers maps to a real word list.
 
 ### Known content gaps
 
-The word lists still need a proper scope-and-sequence pass against a real
-curriculum:
+**The story text has not been checked against a curriculum.** It is decodable
+by pattern plus common sight words, but every story needs a teacher's review
+pass before it goes to students. Specifically:
 
 - **`cvce-e` contains no long-E words.** CVCe long E barely exists in English
   (`these`, `eve`, `Pete`), so the list holds long-O and long-A words and is
   labelled accordingly. It should probably be replaced with `ee`/`ea` vowel teams.
-- Not every word appears in a sentence, so some pages highlight nothing.
+- Stories contain some words outside their own pattern (`saw`, `hid`, `crumbs`,
+  `moss`) that assume earlier skills were taught. There is no declared sight-word
+  list to validate against yet.
 - CVC short vowels are a K-1 skill. For 2nd grade the gaps are r-controlled
   vowels, vowel teams, diphthongs, inflectional endings, and two-syllable words.
-- The 12-page Longer Book gives one word per page with the current 10-word
-  lists; it wants ~20 words per list.
+- Review-book stories are sampled from five different stories, so they read as
+  unrelated sentences rather than one narrative.
 
 ## Getting Started
 
@@ -129,13 +144,14 @@ sheet 2 front:  6 | 3        sheet 2 back:  4 | 5
 
 | File | Role |
 |------|------|
-| `js/data.js` | Word lists, `SKILLS` (drives both dropdowns), templates |
-| `js/generator.js` | Pagination, sentence pairing, saddle-stitch imposition |
+| `js/data.js` | Stories, practice word lists, `SKILLS` (drives both dropdowns), templates |
+| `js/generator.js` | Page building and saddle-stitch imposition |
 | `js/app.js` | Form wiring, dependent menus, status messages |
 | `css/style.css` | Screen styles + `@media print` booklet layout |
 
 `SKILLS` in `data.js` is the single source of truth for the menus - adding a
-word list plus an entry there is all it takes to add a book.
+`WORD_DATA` entry (title, label, `practiceWords`, 10-sentence `story`) plus an
+entry in `SKILLS` is all it takes to add a book.
 
 ## License
 
