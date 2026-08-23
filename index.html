@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Decodable Book Generator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1>📚 Decodable Book Generator</h1>
+      <p class="subtitle">Create foldable reading books for your classroom</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Form Section -->
+      <section class="form-section">
+        <h2>📝 Book Details</h2>
+        <form id="bookForm" class="book-form">
+          <!-- Skill Level -->
+          <div class="form-group">
+            <label for="skillLevel">
+              <span class="label-icon">🎯</span>
+              Select Skill
+            </label>
+            <select id="skillLevel" name="skillLevel" required>
+              <option value="">-- Choose a skill --</option>
+              <option value="cvc">CVC Words (Consonant-Vowel-Consonant)</option>
+              <option value="cvvc">CVVC Words</option>
+              <option value="cvce">CVCe Words (Magic e)</option>
+              <option value="digraphs">Digraphs (sh, ch, th, wh, ph)</option>
+              <option value="blends">Consonant Blends (bl, cl, fl, gl, pl, tr, dr, pr, br)</option>
+              <option value="short-vowels">Short Vowel Review</option>
+              <option value="long-vowels">Long Vowel Review</option>
+            </select>
+          </div>
+
+          <!-- Narrow Skill / Vowel -->
+          <div class="form-group">
+            <label for="narrowSkill">
+              <span class="label-icon">🔤</span>
+              Narrow Skill (Vowel Focus)
+            </label>
+            <select id="narrowSkill" name="narrowSkill" required>
+              <option value="">-- Choose a vowel --</option>
+              <option value="a">Short A (at, an, ap)</option>
+              <option value="e">Short E (ed, eg, el, em, en)</option>
+              <option value="i">Short I (it, in, ig, ip)</option>
+              <option value="o">Short O (op, ot, on, og)</option>
+              <option value="u">Short U (up, un, ug, ub)</option>
+              <option value="a-long">Long A (a_e, ai, ay)</option>
+              <option value="e-long">Long E (e_e, ea, ee, ey)</option>
+              <option value="i-long">Long I (i_e, ie, igh, y)</option>
+              <option value="o-long">Long O (o_e, oa, ow)</option>
+              <option value="u-long">Long U (u_e, ew, ou)</option>
+            </select>
+          </div>
+
+          <!-- Book Selection -->
+          <div class="form-group">
+            <label for="bookSelect">
+              <span class="label-icon">📖</span>
+              Select Book Template
+            </label>
+            <select id="bookSelect" name="bookSelect" required>
+              <option value="">-- Choose a book --</option>
+              <option value="mini-book">Mini Book (8 pages)</option>
+              <option value="foldable">Foldable Booklet (4 pages)</option>
+              <option value="flip-book">Flip Book (6 pages)</option>
+              <option value="accordion">Accordion Book (10 pages)</option>
+            </select>
+          </div>
+
+          <!-- Student Name -->
+          <div class="form-group">
+            <label for="studentName">
+              <span class="label-icon">✏️</span>
+              Student Name
+            </label>
+            <input type="text" id="studentName" name="studentName" placeholder="Enter student's name" required>
+          </div>
+
+          <!-- Pronouns -->
+          <div class="form-group">
+            <label for="pronouns">
+              <span class="label-icon">💬</span>
+              Student Pronouns (optional)
+            </label>
+            <select id="pronouns" name="pronouns">
+              <option value="">-- Select pronouns --</option>
+              <option value="he/him">he/him</option>
+              <option value="she/her">she/her</option>
+              <option value="they/them">they/them</option>
+              <option value="he/they">he/they</option>
+              <option value="she/they">she/they</option>
+            </select>
+          </div>
+
+          <!-- Buttons -->
+          <div class="form-actions">
+            <button type="button" id="previewBtn" class="btn btn-secondary">👁️ Preview</button>
+            <button type="button" id="printBtn" class="btn btn-primary">🖨️ Print Book</button>
+            <button type="button" id="resetBtn" class="btn btn-tertiary">🔄 Reset</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Preview Section -->
+      <section class="preview-section" id="previewSection" style="display: none;">
+        <h2>📖 Book Preview</h2>
+        <div id="bookPreview" class="book-preview"></div>
+        <div class="preview-actions">
+          <button type="button" id="printPreviewBtn" class="btn btn-primary">🖨️ Print This Book</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Made with ❤️ for amazing teachers</p>
+    </footer>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/generator.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
