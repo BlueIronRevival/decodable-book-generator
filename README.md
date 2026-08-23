@@ -7,6 +7,8 @@ A web application for teachers to create foldable, printable decodable reading b
 - **Skill Selection**: CVC words, CVCe, digraphs, consonant blends, vowel review
 - **Narrow Focus**: The second menu is rebuilt from the skill you pick
 - **Editable Title**: Prefilled from the story, editable per book
+- **Write Your Own Stories**: Per-skill story editor, saved in the browser
+- **Personalisation**: Name and pronoun tokens filled in per student
 - **Multiple Book Formats**: 4, 6, 8 and 12 page booklets
 - **Black and White**: No colour, no tints, no borders — plain toner-cheap pages
 - **Print-Ready**: Landscape sheets imposed for double-sided printing and folding
@@ -23,6 +25,55 @@ Interior pages carry **one story sentence each**, so a book needs as many story
 sentences as it has story pages. Stories are written to 10 sentences, which
 exactly fills the Longer Book; shorter templates use the first N sentences and
 the app warns you that the story is truncated.
+
+## Writing your own stories
+
+Open **✍️ Write your own story**, pick a skill and focus, and edit the title,
+the back-page practice words, and the story (one sentence per page). **Save**
+stores it for that skill; **Revert to built-in** puts the original back. The
+built-in books are never overwritten.
+
+Saved stories live in `localStorage`, which is **per browser and per device**.
+Use **Export all** to write them to `decodable-stories.json` and **Import** to
+load them on another computer or restore a backup.
+
+### Personalisation tokens
+
+Story text and the title can contain tokens that fill in from the Student Name
+and Pronouns fields. Token names use the they/them form as a mnemonic, and a
+capitalised token produces a capitalised word.
+
+| Token | he/him | she/her | they/them |
+|-------|--------|---------|-----------|
+| `{name}` | the Student Name field | | |
+| `{they}` | he | she | they |
+| `{them}` | him | her | them |
+| `{their}` | his | her | their |
+| `{theirs}` | his | hers | theirs |
+| `{themselves}` | himself | herself | themselves |
+| `{is}` | is | is | are |
+| `{was}` | was | was | were |
+| `{has}` | has | has | have |
+| `{do}` | does | does | do |
+| `{goes}` | goes | goes | go |
+| `{v:run}` | runs | runs | run |
+
+The verb tokens exist because "they" takes a plural verb. Writing
+`{They} {v:run} to the mat.` gives "He runs to the mat." or "They run to the
+mat." — plain substitution would produce "They runs".
+
+`{v:...}` handles regular endings (`{v:push}` -> pushes, `{v:carry}` -> carries)
+and the common irregulars (`{v:have}` -> has, `{v:go}` -> goes).
+
+Notes:
+
+- Leaving Pronouns blank uses **they/them**.
+- `he/they` and `she/they` use the first pronoun throughout, so the grammar
+  stays consistent within one book.
+- An unrecognised token is printed as-is rather than silently dropped, and the
+  editor warns about it — including a suggestion for likely slips like `{his}`.
+- A student's name is usually not decodable at the level of their own book.
+  That is normal for decodable readers, but worth knowing.
 
 ## Book Templates
 
@@ -165,7 +216,9 @@ sheet 2 front:  6 | 3        sheet 2 back:  4 | 5
 
 | File | Role |
 |------|------|
-| `js/data.js` | Stories, practice word lists, `SKILLS` (drives both dropdowns), templates |
+| `js/data.js` | Built-in stories, practice word lists, `SKILLS`, templates |
+| `js/store.js` | `BookLibrary` — localStorage overrides, import/export |
+| `js/personalize.js` | Name and pronoun token substitution |
 | `js/generator.js` | Page building and saddle-stitch imposition |
 | `js/app.js` | Form wiring, dependent menus, status messages |
 | `css/style.css` | Screen styles + `@media print` booklet layout |

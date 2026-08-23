@@ -49,7 +49,7 @@
               Book Title
             </label>
             <input type="text" id="bookTitle" name="bookTitle" placeholder="Book title">
-            <p class="field-note">Prefilled from the story. Type over it to rename the book.</p>
+            <p class="field-note">Prefilled from the story. Type over it to rename; tokens like <code>{Name}</code> work here too.</p>
           </div>
 
           <!-- Book template — options populated from BOOK_TEMPLATES -->
@@ -84,7 +84,7 @@
               <option value="he/they">he/they</option>
               <option value="she/they">she/they</option>
             </select>
-            <p class="field-note">Not printed on the book yet — reserved for personalising the sentences.</p>
+            <p class="field-note">Used for <code>{they}</code> / <code>{their}</code> tokens in your story. Blank means they/them.</p>
           </div>
 
           <!-- Errors and confirmations land here instead of in an alert() -->
@@ -96,6 +96,56 @@
             <button type="button" id="resetBtn" class="btn btn-tertiary">🔄 Reset</button>
           </div>
         </form>
+      </section>
+
+      <!-- Story editor -->
+      <section class="editor-section">
+        <details id="editorDetails">
+          <summary class="editor-summary">✍️ Write your own story <span id="editorBadge" class="editor-badge" hidden>edited</span></summary>
+          <div class="editor-body">
+            <p class="editor-target">Editing: <strong id="editorTarget">— choose a skill first —</strong></p>
+
+            <div class="token-legend">
+              <p class="token-legend-title">Click a token to insert it. It fills in from the Student Name and Pronouns above.</p>
+              <div class="token-chips" id="tokenChips"></div>
+              <p class="instructions-note">
+                Verb tokens exist because "they" takes a plural verb:
+                <code>{They} {v:run}</code> gives "He runs" or "They run" — never "They runs".
+              </p>
+            </div>
+
+            <div class="editor-field">
+              <label for="editTitle">Book title</label>
+              <input type="text" id="editTitle" placeholder="The Cat">
+            </div>
+
+            <div class="editor-field">
+              <label for="editWords">Practice words for the back page</label>
+              <textarea id="editWords" rows="2" placeholder="at, bat, cat, fat, hat"></textarea>
+              <p class="field-note">Separated by commas or spaces. Printed alphabetically.</p>
+            </div>
+
+            <div class="editor-field">
+              <label for="editStory">Story — one sentence per page</label>
+              <textarea id="editStory" rows="11" placeholder="{Name} has a cat.&#10;{They} {v:pat} the cat."></textarea>
+              <p class="field-note" id="editStoryHint"></p>
+            </div>
+
+            <div class="editor-actions">
+              <button type="button" id="saveStoryBtn" class="btn btn-primary">💾 Save story</button>
+              <button type="button" id="revertStoryBtn" class="btn btn-tertiary">↩️ Revert to built-in</button>
+              <button type="button" id="exportBtn" class="btn btn-tertiary">⬇️ Export all</button>
+              <button type="button" id="importBtn" class="btn btn-tertiary">⬆️ Import</button>
+              <input type="file" id="importInput" accept="application/json,.json" hidden>
+            </div>
+
+            <div id="editorStatus" class="form-status" role="status" aria-live="polite"></div>
+            <p class="instructions-note">
+              Saved stories live in this browser only. Use <strong>Export all</strong>
+              to back them up or move them to another computer.
+            </p>
+          </div>
+        </details>
       </section>
 
       <section class="preview-section" id="previewSection" hidden>
@@ -137,6 +187,8 @@
   </div>
 
   <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/personalize.js"></script>
   <script src="js/generator.js"></script>
   <script src="js/app.js"></script>
 </body>

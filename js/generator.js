@@ -18,7 +18,8 @@ const BookGenerator = {
       return { ok: false, error: `Please choose a ${skill.narrowLabel.toLowerCase()} for ${skill.label}.` };
     }
 
-    const data = WORD_DATA[option.key];
+    // The teacher's saved version if there is one, otherwise the built-in book.
+    const data = BookLibrary.get(option.key);
     if (!data) {
       return { ok: false, error: `No content found for "${option.label}" (${option.key}).` };
     }
@@ -32,8 +33,14 @@ const BookGenerator = {
       return { ok: false, error: 'Please enter the student\'s name.' };
     }
 
+    // Name and pronoun tokens are resolved once, here, so every page of the
+    // book uses the same substitutions.
+    const person = { studentName, pronouns };
+    const fill = (text) => Personalize.apply(text, person);
+
     // The teacher can rename the book; fall back to the story's own title.
-    const title = (bookTitle || '').trim() || data.title;
+    const title = fill((bookTitle || '').trim() || data.title);
+    const story = (data.story || []).map(fill);
 
     // Saddle-stitch needs a page count divisible by 4; pad with blanks.
     const pageOrder = this.padToSheetMultiple(template.pageOrder);
@@ -44,7 +51,7 @@ const BookGenerator = {
     let storyIndex = 0;
     const pages = pageOrder.map((pageType) => {
       if (pageType.startsWith('page')) {
-        const sentence = data.story[storyIndex];
+        const sentence = story[storyIndex];
         storyIndex += 1;
         return this.wrapPage(this.createStoryPage(sentence), pageType, 'story');
       }
@@ -70,9 +77,10 @@ const BookGenerator = {
       narrowSkill,
       bookKey: option.key,
       storySlots,
-      storyUsed: Math.min(storySlots, data.story.length),
-      storyLength: data.story.length,
-      warning: this.storyFitWarning(data, storySlots, template)
+      storyUsed: Math.min(storySlots, story.length),
+      storyLength: story.length,
+      isCustom: BookLibrary.isCustom(option.key),
+      warning: this.storyFitWarning(story, storySlots)
     };
   },
 
@@ -80,14 +88,14 @@ const BookGenerator = {
    * Tell the teacher when the chosen template doesn't match the story length,
    * rather than silently cutting the story short or leaving pages empty.
    */
-  storyFitWarning(data, storySlots, template) {
-    if (data.story.length > storySlots) {
-      return `Only the first ${storySlots} of ${data.story.length} story sentences fit this template. ` +
+  storyFitWarning(story, storySlots) {
+    if (story.length > storySlots) {
+      return `Only the first ${storySlots} of ${story.length} story sentences fit this template. ` +
              `Choose "${BOOK_TEMPLATES.accordion.name}" for the whole story.`;
     }
-    if (data.story.length < storySlots) {
-      const spare = storySlots - data.story.length;
-      return `This story has ${data.story.length} sentences but the template has ${storySlots} story pages — ` +
+    if (story.length < storySlots) {
+      const spare = storySlots - story.length;
+      return `This story has ${story.length} sentences but the template has ${storySlots} story pages — ` +
              `the last ${spare} will be illustration-only.`;
     }
     return null;

@@ -10,6 +10,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const pronounSelect = document.getElementById('pronouns');
   const statusEl = document.getElementById('formStatus');
   const previewSection = document.getElementById('previewSection');
+  const editor = {
+    details: document.getElementById('editorDetails'),
+    badge: document.getElementById('editorBadge'),
+    target: document.getElementById('editorTarget'),
+    chips: document.getElementById('tokenChips'),
+    title: document.getElementById('editTitle'),
+    words: document.getElementById('editWords'),
+    story: document.getElementById('editStory'),
+    storyHint: document.getElementById('editStoryHint'),
+    status: document.getElementById('editorStatus'),
+    importInput: document.getElementById('importInput')
+  };
+  let lastFocusedEditorField = null;
   const bookPreview = document.getElementById('bookPreview');
 
   // ===== Populate the menus from the data files =====
@@ -59,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function resetTitleToDefault() {
     const skill = SKILLS[skillSelect.value];
     const option = skill && skill.options.find((o) => o.value === narrowSelect.value);
-    const data = option && WORD_DATA[option.key];
+    const data = option && BookLibrary.get(option.key);
     titleInput.value = data ? data.title : '';
     titleInput.placeholder = data ? data.title : 'Book title';
   }
@@ -133,11 +146,13 @@ document.addEventListener('DOMContentLoaded', () => {
   skillSelect.addEventListener('change', () => {
     refreshNarrowSkills();
     resetTitleToDefault();
+    loadEditor();
     clearStatus();
   });
 
   narrowSelect.addEventListener('change', () => {
     resetTitleToDefault();
+    loadEditor();
     clearStatus();
   });
 
@@ -164,6 +179,7 @@ document.addEventListener('DOMContentLoaded', () => {
     form.reset();
     refreshNarrowSkills();
     resetTitleToDefault();
+    loadEditor();
     previewSection.hidden = true;
     bookPreview.innerHTML = '';
     clearStatus();
@@ -180,8 +196,180 @@ document.addEventListener('DOMContentLoaded', () => {
     ready.then(() => window.print());
   }
 
+  // ===== Story editor =====
+
+  const TOKEN_HELP = [
+    ['{Name}', "the student's name"],
+    ['{They}', 'he / she / they'],
+    ['{them}', 'him / her / them'],
+    ['{their}', 'his / her / their'],
+    ['{theirs}', 'his / hers / theirs'],
+    ['{themselves}', 'himself / herself / themselves'],
+    ['{is}', 'is / are'],
+    ['{was}', 'was / were'],
+    ['{has}', 'has / have'],
+    ['{do}', 'does / do'],
+    ['{v:run}', 'runs / run — any verb after v:']
+  ];
+
+  function buildTokenChips() {
+    TOKEN_HELP.forEach(([token, meaning]) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'token-chip';
+      chip.textContent = token;
+      chip.title = meaning;
+      chip.addEventListener('click', () => insertToken(token));
+      editor.chips.appendChild(chip);
+    });
+  }
+
+  /** Insert a token at the cursor of whichever editor field was last focused. */
+  function insertToken(token) {
+    const field = lastFocusedEditorField || editor.story;
+    const start = field.selectionStart != null ? field.selectionStart : field.value.length;
+    const end = field.selectionEnd != null ? field.selectionEnd : field.value.length;
+    field.value = field.value.slice(0, start) + token + field.value.slice(end);
+    const caret = start + token.length;
+    field.focus();
+    field.setSelectionRange(caret, caret);
+    updateStoryHint();
+  }
+
+  /** Which book the editor is currently pointed at, or null. */
+  function currentBookKey() {
+    const skill = SKILLS[skillSelect.value];
+    const option = skill && skill.options.find((o) => o.value === narrowSelect.value);
+    return option ? option.key : null;
+  }
+
+  function setEditorStatus(message, kind) {
+    editor.status.textContent = message || '';
+    editor.status.className = message ? `form-status form-status-${kind}` : 'form-status';
+  }
+
+  /** Load the selected book into the editor fields. */
+  function loadEditor() {
+    const key = currentBookKey();
+    const fields = [editor.title, editor.words, editor.story];
+
+    if (!key) {
+      editor.target.textContent = '— choose a skill first —';
+      fields.forEach((f) => { f.value = ''; f.disabled = true; });
+      editor.badge.hidden = true;
+      updateStoryHint();
+      return;
+    }
+
+    const book = BookLibrary.get(key);
+    fields.forEach((f) => { f.disabled = false; });
+    editor.target.textContent = `${book.label} (${key})`;
+    editor.title.value = book.title || '';
+    editor.words.value = (book.practiceWords || []).join(', ');
+    editor.story.value = (book.story || []).join('\n');
+    editor.badge.hidden = !BookLibrary.isCustom(key);
+    setEditorStatus('', '');
+    updateStoryHint();
+  }
+
+  /** Live feedback: how many pages the story fills, and any mistyped tokens. */
+  function updateStoryHint() {
+    const lines = editor.story.value.split('\n').map((l) => l.trim()).filter(Boolean);
+    const fits = Object.values(BOOK_TEMPLATES)
+      .filter((t) => t.pageOrder.filter((p) => p.startsWith('page')).length <= lines.length)
+      .map((t) => t.name.replace(/ \(.*/, ''));
+
+    let hint = `${lines.length} sentence${lines.length === 1 ? '' : 's'} = ${lines.length} story page${lines.length === 1 ? '' : 's'}.`;
+    hint += fits.length ? ` Fills: ${fits.join(', ')}.` : ' Not enough for any template yet.';
+
+    const unknown = Personalize.unknownTokens(editor.story.value + ' ' + editor.title.value);
+    if (unknown.length) {
+      hint += `  ⚠ Unknown token${unknown.length === 1 ? '' : 's'}: ${unknown.join(', ')} — these print as-is.`;
+    }
+    editor.storyHint.textContent = hint;
+    editor.storyHint.classList.toggle('hint-warn', unknown.length > 0);
+  }
+
+  function saveStory() {
+    const key = currentBookKey();
+    if (!key) { setEditorStatus('Choose a skill and focus first.', 'error'); return; }
+
+    const result = BookLibrary.save(key, {
+      title: editor.title.value,
+      label: BookLibrary.builtIn(key) ? BookLibrary.builtIn(key).label : '',
+      practiceWords: editor.words.value.split(/[,\n]|\s{1,}/).map((w) => w.trim()).filter(Boolean),
+      story: editor.story.value.split('\n').map((l) => l.trim()).filter(Boolean)
+    });
+
+    if (!result.ok) { setEditorStatus(result.error, 'error'); return; }
+    editor.badge.hidden = false;
+    setEditorStatus('Saved. This book now uses your story.', 'success');
+    resetTitleToDefault();
+    if (!previewSection.hidden) buildAndRender();
+  }
+
+  function revertStory() {
+    const key = currentBookKey();
+    if (!key) return;
+    const result = BookLibrary.revert(key);
+    if (!result.ok) { setEditorStatus(result.error, 'error'); return; }
+    loadEditor();
+    setEditorStatus('Reverted to the built-in story.', 'success');
+    resetTitleToDefault();
+    if (!previewSection.hidden) buildAndRender();
+  }
+
+  function exportLibrary() {
+    if (!BookLibrary.customKeys().length) {
+      setEditorStatus('No saved stories to export yet.', 'error');
+      return;
+    }
+    const blob = new Blob([BookLibrary.exportJSON()], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'decodable-stories.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    setEditorStatus(`Exported ${BookLibrary.customKeys().length} saved book(s).`, 'success');
+  }
+
+  function importLibrary(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = BookLibrary.importJSON(String(reader.result));
+      if (!result.ok) { setEditorStatus(result.error, 'error'); return; }
+      loadEditor();
+      resetTitleToDefault();
+      const skippedNote = result.skipped.length ? ` Skipped: ${result.skipped.join(', ')}.` : '';
+      setEditorStatus(`Imported ${result.imported.length} book(s).${skippedNote}`, 'success');
+    };
+    reader.onerror = () => setEditorStatus('That file could not be read.', 'error');
+    reader.readAsText(file);
+  }
+
+  [editor.title, editor.words, editor.story].forEach((field) => {
+    field.addEventListener('focus', () => { lastFocusedEditorField = field; });
+    field.addEventListener('input', updateStoryHint);
+  });
+
+  document.getElementById('saveStoryBtn').addEventListener('click', saveStory);
+  document.getElementById('revertStoryBtn').addEventListener('click', revertStory);
+  document.getElementById('exportBtn').addEventListener('click', exportLibrary);
+  document.getElementById('importBtn').addEventListener('click', () => editor.importInput.click());
+  editor.importInput.addEventListener('change', () => {
+    if (editor.importInput.files[0]) importLibrary(editor.importInput.files[0]);
+    editor.importInput.value = '';
+  });
+
   // ===== Init =====
+  const loaded = BookLibrary.load();
+  buildTokenChips();
   buildMenus();
   refreshNarrowSkills();
   resetTitleToDefault();
+  loadEditor();
+  if (!loaded.ok) setEditorStatus(loaded.error, 'error');
 });
