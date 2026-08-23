@@ -6,7 +6,7 @@ const BookGenerator = {
    * so the caller can tell the teacher what went wrong instead of no-oping.
    */
   generate(options) {
-    const { skillLevel, narrowSkill, bookTemplate, studentName, pronouns } = options;
+    const { skillLevel, narrowSkill, bookTemplate, studentName, pronouns, bookTitle } = options;
 
     const skill = SKILLS[skillLevel];
     if (!skill) {
@@ -32,6 +32,9 @@ const BookGenerator = {
       return { ok: false, error: 'Please enter the student\'s name.' };
     }
 
+    // The teacher can rename the book; fall back to the story's own title.
+    const title = (bookTitle || '').trim() || data.title;
+
     // Saddle-stitch needs a page count divisible by 4; pad with blanks.
     const pageOrder = this.padToSheetMultiple(template.pageOrder);
     const storySlots = pageOrder.filter((t) => t.startsWith('page')).length;
@@ -46,7 +49,7 @@ const BookGenerator = {
         return this.wrapPage(this.createStoryPage(sentence), pageType, 'story');
       }
       if (pageType === 'cover') {
-        return this.wrapPage(this.createCoverPage(data, studentName), pageType, 'cover');
+        return this.wrapPage(this.createCoverPage(title, data, studentName), pageType, 'cover');
       }
       if (pageType === 'back') {
         return this.wrapPage(this.createBackPage(data), pageType, 'back');
@@ -58,7 +61,8 @@ const BookGenerator = {
       ok: true,
       pages,
       template,
-      bookTitle: data.title,
+      bookTitle: title,
+      defaultTitle: data.title,
       skillLabel: data.label,
       studentName,
       pronouns,
@@ -121,12 +125,12 @@ const BookGenerator = {
   },
 
   /**
-   * Cover: story title, skill, and the student's name.
+   * Cover: book title, skill, and the student's name. No decorative icon —
+   * emoji are the one element that cannot render in black and white.
    */
-  createCoverPage(data, studentName) {
+  createCoverPage(title, data, studentName) {
     return `
-      <div class="cover-decoration">${PAGE_ICONS.cover}</div>
-      <div class="cover-title">${this.escapeHtml(data.title)}</div>
+      <div class="cover-title">${this.escapeHtml(title)}</div>
       <div class="cover-skill">${this.escapeHtml(data.label)}</div>
       <div class="student-name">Name: ${this.escapeHtml(studentName)}</div>
     `;

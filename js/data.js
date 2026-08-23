@@ -507,6 +507,3 @@ const BOOK_TEMPLATES = {
                 'page6', 'page7', 'page8', 'page9', 'page10', 'back']
   }
 };
-
-// ===== Decorative Icons =====
-const PAGE_ICONS = { 'cover': '📚' };

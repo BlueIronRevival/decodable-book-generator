@@ -22,6 +22,8 @@
   --text: #2C3E50;
   --text-light: #7F8C8D;
   --border: #DCE1E8;
+  --ink: #000000;
+  --ink-soft: #444444;
   --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   --radius: 12px;
   --radius-sm: 8px;
@@ -288,23 +290,23 @@ body {
   justify-content: center;
 }
 
-/* Cover */
-.cover-decoration { font-size: 2.5rem; margin-bottom: 10px; }
+/* Everything inside a book page is black and white — what you see in the
+   preview is what comes out of the printer. */
+.book-page { color: var(--ink); }
 
+/* Cover */
 .cover-title {
   font-family: var(--font-heading);
   font-size: 2rem;
   font-weight: 700;
-  color: var(--primary-dark);
   line-height: 1.2;
 }
 
-.cover-skill { font-size: 0.9rem; color: var(--text-light); margin-top: 8px; }
+.cover-skill { font-size: 0.9rem; color: var(--ink-soft); margin-top: 8px; }
 
 .student-name {
   font-size: 1.4rem;
   font-weight: 700;
-  color: var(--primary);
   margin-top: 20px;
 }
 
@@ -324,7 +326,7 @@ body {
   font-family: var(--font-heading);
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--text-light);
+  color: var(--ink-soft);
   letter-spacing: 0.5px;
   margin-bottom: 16px;
 }
@@ -356,17 +358,16 @@ body {
 
 /* ===== Print — landscape, two book pages per sheet face ===== */
 @media print {
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
+  /* A zero page margin leaves Chrome no margin box to draw its header and
+     footer into, which suppresses the date, page title, URL and page number
+     without the teacher touching the print dialog. The physical margin is
+     applied as page padding below instead. */
   @page {
     size: letter landscape;
-    margin: 0.4in;
+    margin: 0;
   }
 
-  body { background: white; font-size: 12pt; }
+  body { background: white; color: var(--ink); font-size: 12pt; }
 
   .app-header,
   .form-section,
@@ -406,9 +407,9 @@ body {
     page-break-after: auto;
   }
 
-  /* Letter landscape (8.5in tall) minus the 0.4in top/bottom margins. */
+  /* Full letter-landscape height, since @page has no margin of its own. */
   .sheet-body {
-    height: 7.7in;
+    height: 8.5in;
     border: none;
     border-radius: 0;
     min-height: 0;
@@ -422,9 +423,10 @@ body {
     overflow: hidden;
   }
 
-  .print-page > .book-page { padding: 0.4in 0.45in; }
-
-  .book-page.cover { background: linear-gradient(135deg, #F2F8FD, #E4F1FC); }
+  /* The physical paper margin. Slightly wider on the outer edge than at the
+     fold, so the gutter doesn't swallow the text. */
+  .print-page-left > .book-page { padding: 0.5in 0.4in 0.5in 0.55in; }
+  .print-page-right > .book-page { padding: 0.5in 0.55in 0.5in 0.4in; }
 
   .cover-title { font-size: 30pt; }
   .student-name { font-size: 18pt; }

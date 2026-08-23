@@ -6,14 +6,16 @@ A web application for teachers to create foldable, printable decodable reading b
 
 - **Skill Selection**: CVC words, CVCe, digraphs, consonant blends, vowel review
 - **Narrow Focus**: The second menu is rebuilt from the skill you pick
+- **Editable Title**: Prefilled from the story, editable per book
 - **Multiple Book Formats**: 4, 6, 8 and 12 page booklets
+- **Black and White**: No colour, no tints, no borders — plain toner-cheap pages
 - **Print-Ready**: Landscape sheets imposed for double-sided printing and folding
 
 ## Book anatomy
 
 | Page | Contains |
 |------|----------|
-| Cover | Story title, phonics skill, student name |
+| Cover | Book title, phonics skill, student name |
 | Interior pages | One line of story, with the rest of the page left open for the student to illustrate. No word lists, no boxes, no page outlines. |
 | Back page | The practice word list for the skill, alphabetised |
 
@@ -120,10 +122,29 @@ netlify deploy --prod
    - **Two-sided**: On, **flip on the short edge** (if the back comes out
      upside-down, your driver labels it the other way -- use long edge)
    - **Scale**: 100% (not "Fit to page")
-   - **Margins**: Default
-   - **Headers/Footers**: Unchecked
+   - **Margins**: Default -- leave this alone, see below
 5. Stack the sheets in order, fold the whole stack in half along the dotted
    line, and staple the spine
+
+### Why there is no date, URL or page number in the margin
+
+Browsers print their own header and footer (date, page title, URL, page number)
+into the **page margin box**. The stylesheet sets `@page { margin: 0 }`, which
+leaves Chrome no margin box to draw them into, so they are suppressed whether or
+not "Headers and footers" is ticked in the print dialog. The physical paper
+margin is applied as padding on each half-page instead:
+
+```css
+@page { size: letter landscape; margin: 0; }
+.sheet-body { height: 8.5in; }
+.print-page-left  > .book-page { padding: 0.5in 0.4in 0.5in 0.55in; }
+.print-page-right > .book-page { padding: 0.5in 0.55in 0.5in 0.4in; }
+```
+
+This is why the **Margins** setting must stay on **Default** — choosing
+"Custom" overrides the zero margin and the headers come back.
+
+### Sheet order
 
 Sheets are emitted in printing order, not reading order. For an 8-page book:
 
@@ -148,6 +169,10 @@ sheet 2 front:  6 | 3        sheet 2 back:  4 | 5
 | `js/generator.js` | Page building and saddle-stitch imposition |
 | `js/app.js` | Form wiring, dependent menus, status messages |
 | `css/style.css` | Screen styles + `@media print` booklet layout |
+
+Book pages are black and white in the preview as well as in print, so what the
+teacher sees on screen is what comes out of the printer. Only the surrounding
+app chrome (header, buttons, status messages) is coloured.
 
 `SKILLS` in `data.js` is the single source of truth for the menus - adding a
 `WORD_DATA` entry (title, label, `practiceWords`, 10-sentence `story`) plus an

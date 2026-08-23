@@ -42,6 +42,16 @@
             </select>
           </div>
 
+          <!-- Book title — prefilled from the chosen story, editable -->
+          <div class="form-group">
+            <label for="bookTitle">
+              <span class="label-icon">📕</span>
+              Book Title
+            </label>
+            <input type="text" id="bookTitle" name="bookTitle" placeholder="Book title">
+            <p class="field-note">Prefilled from the story. Type over it to rename the book.</p>
+          </div>
+
           <!-- Book template — options populated from BOOK_TEMPLATES -->
           <div class="form-group">
             <label for="bookSelect">
@@ -61,7 +71,7 @@
             <input type="text" id="studentName" name="studentName" placeholder="Enter student's name" required>
           </div>
 
-          <div class="form-group form-group-wide">
+          <div class="form-group">
             <label for="pronouns">
               <span class="label-icon">💬</span>
               Student Pronouns (optional)
@@ -95,7 +105,8 @@
           <h3>How to print &amp; fold</h3>
           <ol>
             <li>Print <strong>double-sided</strong>, flipping on the <strong>short edge</strong>.</li>
-            <li>Choose <strong>Landscape</strong>, Letter paper, and turn <strong>off</strong> headers &amp; footers.</li>
+            <li>Choose <strong>Landscape</strong> and Letter paper.</li>
+            <li>Leave <strong>Margins</strong> on <strong>Default</strong>.</li>
             <li>Set scale to <strong>100%</strong> (not "Fit to page").</li>
             <li>Stack the sheets in order, fold the whole stack in half along the dotted line, and staple the spine.</li>
           </ol>
@@ -106,6 +117,10 @@
           <p class="instructions-note">
             Print one sheet first to check. Drivers label duplex differently: if
             the back comes out upside-down, switch to <strong>long edge</strong>.
+          </p>
+          <p class="instructions-note">
+            The book prints black and white, with no date, URL or page number in
+            the margins — you do not need to change any of those settings.
           </p>
         </div>
 

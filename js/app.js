@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const narrowSelect = document.getElementById('narrowSkill');
   const narrowLabel = document.getElementById('narrowSkillLabel');
   const templateSelect = document.getElementById('bookSelect');
+  const titleInput = document.getElementById('bookTitle');
   const studentInput = document.getElementById('studentName');
   const pronounSelect = document.getElementById('pronouns');
   const statusEl = document.getElementById('formStatus');
@@ -50,6 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  /**
+   * Put the chosen story's own title in the title box. Called whenever the
+   * skill or narrow skill changes, since the old title belonged to a different
+   * story; anything the teacher types afterwards is kept until they switch again.
+   */
+  function resetTitleToDefault() {
+    const skill = SKILLS[skillSelect.value];
+    const option = skill && skill.options.find((o) => o.value === narrowSelect.value);
+    const data = option && WORD_DATA[option.key];
+    titleInput.value = data ? data.title : '';
+    titleInput.placeholder = data ? data.title : 'Book title';
+  }
+
   // ===== Status messages =====
 
   function setStatus(message, kind, note) {
@@ -78,6 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return {
       skillLevel: skillSelect.value,
       narrowSkill: narrowSelect.value,
+      bookTitle: titleInput.value,
       bookTemplate: templateSelect.value,
       studentName: studentInput.value.trim(),
       pronouns: pronounSelect.value
@@ -117,10 +132,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   skillSelect.addEventListener('change', () => {
     refreshNarrowSkills();
+    resetTitleToDefault();
     clearStatus();
   });
 
-  [narrowSelect, templateSelect, studentInput, pronounSelect].forEach((el) => {
+  narrowSelect.addEventListener('change', () => {
+    resetTitleToDefault();
+    clearStatus();
+  });
+
+  [templateSelect, studentInput, titleInput, pronounSelect].forEach((el) => {
     el.addEventListener('change', clearStatus);
   });
 
@@ -142,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('resetBtn').addEventListener('click', () => {
     form.reset();
     refreshNarrowSkills();
+    resetTitleToDefault();
     previewSection.hidden = true;
     bookPreview.innerHTML = '';
     clearStatus();
@@ -161,4 +183,5 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== Init =====
   buildMenus();
   refreshNarrowSkills();
+  resetTitleToDefault();
 });
