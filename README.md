@@ -4,7 +4,7 @@ A web application for teachers to create foldable, printable decodable reading b
 
 ## Features
 
-- **Skill Selection**: CVC words, CVCe, digraphs, consonant blends, vowel review
+- **Skill Selection**: CVC, endings, digraphs, blends, CVCe, vowel teams, r-controlled, diphthongs, two-syllable, review
 - **Narrow Focus**: The second menu is rebuilt from the skill you pick
 - **Editable Title**: Prefilled from the story, editable per book
 - **Admin Sign-In**: Server-verified password; the editor is admins-only
@@ -201,34 +201,86 @@ aren't are padded with blank pages inserted before the back cover.
 
 ## Skills Available
 
-23 books in total. The "narrow skill" menu is rebuilt from the skill you pick,
-so every combination the UI offers maps to a real word list.
+36 books. The "narrow skill" menu is rebuilt from the skill you pick, so every
+combination the UI offers maps to a real word list.
 
 | Skill | Narrow options |
 |-------|----------------|
 | CVC Words | short a, e, i, o, u |
-| CVCe Words (Magic e) | a, e, i, o, u |
+| Inflectional Endings | -s, -ed, -ing |
 | Digraphs | sh, ch, th |
 | Consonant Blends | bl, cl, fl, pl, tr, dr, pr, br |
+| CVCe Words (Magic e) | a, i, o, u |
+| Vowel Teams | ee, ea, ai/ay, oa/ow |
+| R-Controlled Vowels | ar, or, er/ir/ur |
+| Diphthongs | oi/oy, ou/ow |
+| Two-Syllable Words | compound words, closed syllables |
 | Short Vowel Review | mixed (samples all five short-vowel lists) |
-| Long Vowel Review | mixed (samples all five CVCe lists) |
+| Long Vowel Review | mixed (samples the four CVCe lists) |
 
-### Known content gaps
+There is no CVCe long-E book, because CVCe long E barely exists in English
+(`these`, `eve`, `Pete`). Long E is taught as the `ee` and `ea` vowel teams
+instead.
 
-**The story text has not been checked against a curriculum.** It is decodable
-by pattern plus common sight words, but every story needs a teacher's review
-pass before it goes to students. Specifically:
+## Checking decodability
 
-- **`cvce-e` contains no long-E words.** CVCe long E barely exists in English
-  (`these`, `eve`, `Pete`), so the list holds long-O and long-A words and is
-  labelled accordingly. It should probably be replaced with `ee`/`ea` vowel teams.
-- Stories contain some words outside their own pattern (`saw`, `hid`, `crumbs`,
-  `moss`) that assume earlier skills were taught. There is no declared sight-word
-  list to validate against yet.
-- CVC short vowels are a K-1 skill. For 2nd grade the gaps are r-controlled
-  vowels, vowel teams, diphthongs, inflectional endings, and two-syllable words.
-- Review-book stories are sampled from five different stories, so they read as
-  unrelated sentences rather than one narrative.
+A decodable book is only decodable relative to what has been taught. Three
+things in `js/data.js` make that explicit, and checkable:
+
+| | |
+|---|---|
+| `SEQUENCE` | The order skills are taught, and which patterns each book introduces |
+| `SIGHT_WORDS` | Words children recognise on sight — irregular (`said`) or too frequent to postpone (`the`) |
+| `NAMES` | Proper nouns, which are not expected to be decodable |
+
+Then:
+
+```bash
+npm run check-content
+```
+
+reads every story and reports any word a child could not yet sound out at that
+point. A word passes if it is a sight word or name, a practice word from this or
+an earlier book, a taught ending on a word that passes, a compound of two words
+that pass, or a match for a spelling pattern taught by then. Anything else is
+printed with the sentence it came from:
+
+```
+blend-br
+  bird           sentence 3
+                 "A brave bird sat on a branch."
+```
+
+That is a real example — `bird` is r-controlled, taught nine books later. It was
+rewritten to `bug`. The check runs as part of `npm test`, so content cannot
+regress silently.
+
+**Adding a word to `SIGHT_WORDS` is a curriculum decision, not a typo fix.** It
+asserts that children reading these books have been taught it.
+
+### What the checker does not do
+
+It checks spelling patterns, not pronunciation, and is deliberately generous in
+three places:
+
+- it accepts any consonant cluster, not only the blends taught so far
+- it cannot see silent letters, so `crumbs` passes as a closed syllable
+- it cannot tell `read` (present) from `read` (past)
+
+It catches what actually creeps in — vowel teams, r-controlled vowels and
+multisyllabic words arriving before they are taught. **It does not replace a
+teacher's review pass**, and the stories have still not been checked against any
+particular published scope and sequence. Yours will differ; `SEQUENCE` is the
+one place to change to match it.
+
+### Remaining content notes
+
+- Review-book stories are now written as single narratives rather than sampled
+  sentences, but their **practice word lists** are still sampled from the source
+  books, so the list is broader than the story.
+- The sequence teaches plural `-s` immediately after CVC. That is earlier than
+  some published sequences put it, and it is deliberate: almost no natural
+  sentence survives without it.
 
 ## Getting Started
 
@@ -327,11 +379,12 @@ sheet 2 front:  6 | 3        sheet 2 back:  4 | 5
 
 | File | Role |
 |------|------|
-| `js/data.js` | Built-in stories, practice word lists, `SKILLS`, templates |
+| `js/data.js` | Built-in stories, word lists, `SKILLS`, `SEQUENCE`, `SIGHT_WORDS`, templates |
 | `js/store.js` | `BookLibrary` — published/legacy/built-in layers, publishing, import/export |
 | `netlify/functions/` | `login` and `books` — the API, and the real security boundary |
 | `netlify/lib/credentials.mjs` | PBKDF2 hashing and HMAC token signing (server only) |
 | `tools/hash-password.mjs` | Generates the credential environment variables |
+| `tools/check-content.mjs` | Decodability checker (`npm run check-content`) |
 | `js/auth.js` | `Auth` — sign-in against the API, holds the session token |
 | `js/personalize.js` | Name and pronoun token substitution |
 | `js/generator.js` | Page building and saddle-stitch imposition |
@@ -342,9 +395,10 @@ Book pages are black and white in the preview as well as in print, so what the
 teacher sees on screen is what comes out of the printer. Only the surrounding
 app chrome (header, buttons, status messages) is coloured.
 
-`SKILLS` in `data.js` is the single source of truth for the menus - adding a
-`WORD_DATA` entry (title, label, `practiceWords`, 10-sentence `story`) plus an
-entry in `SKILLS` is all it takes to add a book.
+`SKILLS` in `data.js` is the single source of truth for the menus. Adding a book
+means three entries: `WORD_DATA` (title, label, `practiceWords`, 10-sentence
+`story`), `SKILLS` (so it appears in a menu), and `SEQUENCE` (so it is checked).
+`npm test` fails if any of the three is missing.
 
 ## License
 
