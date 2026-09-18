@@ -68,7 +68,7 @@ token. **The security boundary is the server, not the page.**
    is not echoed, not written to disk, and not recoverable from what it prints.
 
 2. Paste them into Netlify -> **Site configuration** -> **Environment
-   variables**:
+   variables**, or run `npm run hash-password > .env` and import that file:
 
    | Variable | Purpose |
    |----------|---------|
@@ -83,6 +83,26 @@ token. **The security boundary is the server, not the page.**
    letting everyone in.
 
 To rotate the password, run the tool again and replace both variables.
+
+### Scopes and secret marking need a paid plan
+
+Ideally these variables would be scoped to **functions only** (they are never
+read at build time) and marked **"contains secret values"** so the raw value
+cannot be read back and untrusted deploys cannot see it.
+
+Both are Netlify paid-plan features. On a **Personal** account the API returns
+403 — and the CLI fails *silently*, exit 0 with no output, so the variable looks
+set and is not. `netlify env:set --scope functions --secret` is therefore a trap
+on the free tier; set the variables plainly and verify with `netlify env:list`.
+
+What that costs you on the free plan:
+
+- the variables are available during builds as well as to functions. Nothing in
+  the build reads them — the build command is `npm run check-content` — but a
+  future build step that printed the environment would expose them.
+- the values stay readable in the Netlify UI by anyone with account access.
+- **if this repository is public, check your deploy-preview settings.** A pull
+  request build can otherwise run with these variables present.
 
 ### What is and is not protected
 
