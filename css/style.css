@@ -204,6 +204,54 @@ body {
 .btn-tertiary { background: var(--bg); color: var(--text); border: 2px solid var(--border); }
 .btn-tertiary:hover { background: var(--border); }
 
+/* ===== Admin sign-in ===== */
+.auth-section {
+  background: var(--bg-card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+
+.auth-locked { padding: 28px; }
+
+.auth-locked h2 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+  color: var(--primary-dark);
+}
+
+.auth-intro { font-size: 0.95rem; color: var(--text-light); margin-bottom: 20px; }
+
+/* Narrow on purpose: two short fields shouldn't stretch the full card width. */
+.auth-form {
+  display: grid;
+  gap: 16px;
+  max-width: 420px;
+}
+
+.auth-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* Signed-in state replaces the form with a single bar. */
+.auth-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 28px;
+  background: var(--success-bg);
+  border-left: 6px solid var(--success);
+}
+
+/* display:flex above would otherwise beat the browser's [hidden] rule. */
+.auth-bar[hidden] { display: none; }
+
+.auth-who { font-size: 0.95rem; color: var(--success); }
+.auth-who strong { color: var(--text); }
+.auth-bar .btn { padding: 8px 18px; font-size: 0.9rem; }
+
 /* ===== Story editor ===== */
 .editor-section {
   background: var(--bg-card);
@@ -469,10 +517,12 @@ code {
 /* ===== Responsive ===== */
 @media (max-width: 700px) {
   .book-form { grid-template-columns: 1fr; }
-  .form-actions, .editor-actions { flex-direction: column; }
+  .form-actions, .editor-actions, .auth-actions { flex-direction: column; }
   .btn { width: 100%; text-align: center; }
   .editor-body { padding: 0 18px 18px; }
   .editor-summary { padding: 16px 18px; }
+  .auth-locked { padding: 18px; }
+  .auth-bar { padding: 14px 18px; }
   .app-header h1 { font-size: 1.5rem; }
   .sheet-body { min-width: 560px; }
 }
@@ -492,6 +542,7 @@ code {
 
   .app-header,
   .form-section,
+  .auth-section,
   .editor-section,
   .app-footer,
   .preview-actions,

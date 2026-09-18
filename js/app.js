@@ -22,6 +22,17 @@ document.addEventListener('DOMContentLoaded', () => {
     status: document.getElementById('editorStatus'),
     importInput: document.getElementById('importInput')
   };
+  const auth = {
+    section: document.getElementById('authSection'),
+    locked: document.getElementById('authLocked'),
+    bar: document.getElementById('authBar'),
+    who: document.getElementById('authWho'),
+    form: document.getElementById('authForm'),
+    username: document.getElementById('authUsername'),
+    password: document.getElementById('authPassword'),
+    status: document.getElementById('authStatus')
+  };
+  const editorSection = document.getElementById('editorSection');
   let lastFocusedEditorField = null;
   const bookPreview = document.getElementById('bookPreview');
 
@@ -290,31 +301,66 @@ document.addEventListener('DOMContentLoaded', () => {
     editor.storyHint.classList.toggle('hint-warn', unknown.length > 0);
   }
 
-  function saveStory() {
+  /**
+   * Disable the editor's buttons while a request is in flight, so an impatient
+   * double-click cannot fire two conflicting writes at the server.
+   */
+  async function whileBusy(button, label, work) {
+    const buttons = Array.from(document.querySelectorAll('.editor-actions .btn'));
+    const original = button.textContent;
+    buttons.forEach((b) => { b.disabled = true; });
+    button.textContent = label;
+    try {
+      return await work();
+    } finally {
+      buttons.forEach((b) => { b.disabled = false; });
+      button.textContent = original;
+    }
+  }
+
+  /** A rejected token means the session died mid-edit — say so and show the form. */
+  function handleExpiry(result) {
+    if (!result.expired) return false;
+    refreshAuthUI();
+    setAuthStatus('That session expired. Sign in again — your text is still in the editor.', 'warn');
+    return true;
+  }
+
+  async function saveStory(event) {
     const key = currentBookKey();
     if (!key) { setEditorStatus('Choose a skill and focus first.', 'error'); return; }
 
-    const result = BookLibrary.save(key, {
-      title: editor.title.value,
-      label: BookLibrary.builtIn(key) ? BookLibrary.builtIn(key).label : '',
-      practiceWords: editor.words.value.split(/[,\n]|\s{1,}/).map((w) => w.trim()).filter(Boolean),
-      story: editor.story.value.split('\n').map((l) => l.trim()).filter(Boolean)
-    });
+    const result = await whileBusy(event.currentTarget, 'Publishing...', () =>
+      BookLibrary.publish(key, {
+        title: editor.title.value,
+        label: BookLibrary.builtIn(key) ? BookLibrary.builtIn(key).label : '',
+        practiceWords: editor.words.value.split(/[,\n]|\s{1,}/).map((w) => w.trim()).filter(Boolean),
+        story: editor.story.value.split('\n').map((l) => l.trim()).filter(Boolean)
+      }));
 
-    if (!result.ok) { setEditorStatus(result.error, 'error'); return; }
+    if (!result.ok) {
+      if (!handleExpiry(result)) setEditorStatus(result.error, 'error');
+      return;
+    }
     editor.badge.hidden = false;
-    setEditorStatus('Saved. This book now uses your story.', 'success');
+    setEditorStatus('Published. Every teacher gets this story the next time they load the page.', 'success');
     resetTitleToDefault();
     if (!previewSection.hidden) buildAndRender();
   }
 
-  function revertStory() {
+  async function revertStory(event) {
     const key = currentBookKey();
     if (!key) return;
-    const result = BookLibrary.revert(key);
-    if (!result.ok) { setEditorStatus(result.error, 'error'); return; }
+
+    const result = await whileBusy(event.currentTarget, 'Reverting...', () => BookLibrary.unpublish(key));
+    if (!result.ok) {
+      if (!handleExpiry(result)) setEditorStatus(result.error, 'error');
+      return;
+    }
     loadEditor();
-    setEditorStatus('Reverted to the built-in story.', 'success');
+    setEditorStatus(result.local
+      ? 'Removed that older story from this browser. The built-in one is back.'
+      : 'Unpublished. Everyone is back on the built-in story.', 'success');
     resetTitleToDefault();
     if (!previewSection.hidden) buildAndRender();
   }
@@ -338,13 +384,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function importLibrary(file) {
     const reader = new FileReader();
-    reader.onload = () => {
-      const result = BookLibrary.importJSON(String(reader.result));
-      if (!result.ok) { setEditorStatus(result.error, 'error'); return; }
+    reader.onload = async () => {
+      setEditorStatus('Publishing the imported books...', 'warn');
+      const result = await BookLibrary.importJSON(String(reader.result));
+      if (!result.ok) {
+        if (!handleExpiry(result)) setEditorStatus(result.error, 'error');
+        return;
+      }
       loadEditor();
       resetTitleToDefault();
       const skippedNote = result.skipped.length ? ` Skipped: ${result.skipped.join(', ')}.` : '';
-      setEditorStatus(`Imported ${result.imported.length} book(s).${skippedNote}`, 'success');
+      setEditorStatus(`Published ${result.imported.length} book(s).${skippedNote}`, 'success');
+      if (!previewSection.hidden) buildAndRender();
     };
     reader.onerror = () => setEditorStatus('That file could not be read.', 'error');
     reader.readAsText(file);
@@ -353,6 +404,69 @@ document.addEventListener('DOMContentLoaded', () => {
   [editor.title, editor.words, editor.story].forEach((field) => {
     field.addEventListener('focus', () => { lastFocusedEditorField = field; });
     field.addEventListener('input', updateStoryHint);
+  });
+
+  // ===== Admin sign-in =====
+  //
+  // Auth gates who may *write* a story. It does not gate reading or printing,
+  // and stories already saved stay in use after signing out — the point is to
+  // stop the books being rewritten, not to hide them.
+
+  function setAuthStatus(message, kind) {
+    auth.status.textContent = message || '';
+    auth.status.className = message ? `form-status form-status-${kind}` : 'form-status';
+  }
+
+  /** Show either the sign-in form or the editor, never both. */
+  function refreshAuthUI() {
+    const signedIn = Auth.isSignedIn();
+    auth.locked.hidden = signedIn;
+    auth.bar.hidden = !signedIn;
+    editorSection.hidden = !signedIn;
+    if (signedIn) auth.who.textContent = Auth.displayName();
+  }
+
+  auth.form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const button = auth.form.querySelector('button[type="submit"]');
+    const label = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Signing in...';
+    setAuthStatus('', '');
+
+    let result;
+    try {
+      result = await Auth.signIn(auth.username.value, auth.password.value);
+    } finally {
+      button.disabled = false;
+      button.textContent = label;
+    }
+
+    // Clear the password either way, so it isn't left sitting in the field.
+    auth.password.value = '';
+
+    if (!result.ok) {
+      auth.password.focus();
+      setAuthStatus(result.error, 'error');
+      return;
+    }
+
+    setAuthStatus('', '');
+    refreshAuthUI();
+    loadEditor();
+    editor.details.open = true;
+    if (result.warning) setEditorStatus(result.warning, 'warn');
+    editorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  document.getElementById('signOutBtn').addEventListener('click', () => {
+    Auth.signOut();
+    editor.details.open = false;
+    auth.username.value = '';
+    auth.password.value = '';
+    refreshAuthUI();
+    setAuthStatus('Signed out.', 'success');
   });
 
   document.getElementById('saveStoryBtn').addEventListener('click', saveStory);
@@ -365,11 +479,31 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ===== Init =====
+  //
+  // Render from the cache first so the page is usable immediately, then fetch
+  // the published books and re-render if they changed. A teacher on a dead
+  // connection still gets a working generator.
   const loaded = BookLibrary.load();
+  const session = Auth.load();
   buildTokenChips();
   buildMenus();
   refreshNarrowSkills();
   resetTitleToDefault();
   loadEditor();
+  refreshAuthUI();
   if (!loaded.ok) setEditorStatus(loaded.error, 'error');
+  if (!session.ok) setAuthStatus(session.error, 'error');
+  else if (session.expired) setAuthStatus('That sign-in timed out. Sign in again to keep editing.', 'warn');
+
+  BookLibrary.refresh().then((result) => {
+    if (!result.ok) {
+      // Offline is not an error worth shouting about: the built-in books and
+      // the cache still work. Say it once, quietly, in the editor.
+      if (Auth.isSignedIn()) setEditorStatus(result.error, 'warn');
+      return;
+    }
+    resetTitleToDefault();
+    loadEditor();
+    if (!previewSection.hidden) buildAndRender();
+  });
 });
