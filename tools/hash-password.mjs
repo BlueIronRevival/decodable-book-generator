@@ -17,7 +17,10 @@ import { hashPassword, PBKDF2_ITERATIONS } from '../netlify/lib/credentials.mjs'
 // Terminal mode only when stdin really is a terminal. Forcing it on a pipe
 // makes readline echo the whole buffer at once and never settle.
 const interactive = Boolean(process.stdin.isTTY);
-const rl = createInterface({ input: process.stdin, output: process.stdout, terminal: interactive });
+// Echo goes to stderr, not stdout. stdout carries only the four variables, so
+// `npm run hash-password > .env` writes a clean file — with the echo on stdout
+// your keystrokes would land in it too.
+const rl = createInterface({ input: process.stdin, output: process.stderr, terminal: interactive });
 
 let muted = false;
 // In terminal mode readline echoes each keystroke through this. Swallowing it
