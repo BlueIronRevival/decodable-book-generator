@@ -1,6 +1,9 @@
 [build]
-  publish = "."
-  command = "echo 'No build needed - static site'"
+  # Only public/ is served. Publishing the repo root would also serve tests/,
+  # tools/, the function source, and node_modules after Netlify installs
+  # dependencies — none of which belong on a public URL.
+  publish = "public"
+  command = "npm run check-content"
 
 # The API lives in netlify/functions. Each function declares its own routes via
 # `export const config`; this rule simply keeps the SPA catch-all below from

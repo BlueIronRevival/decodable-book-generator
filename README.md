@@ -53,7 +53,7 @@ token. **The security boundary is the server, not the page.**
 | `netlify/lib/credentials.mjs` | Hashing and token signing. Server only. |
 | `netlify/functions/login.mjs` | The only place a password is ever checked |
 | `netlify/functions/books.mjs` | Guards every write to the shared library |
-| `js/auth.js` | Holds a token. No password, no hash, no secret. |
+| `public/js/auth.js` | Holds a token. No password, no hash, no secret. |
 
 ### Setting it up
 
@@ -131,7 +131,7 @@ Three layers, highest priority first:
    teacher. The story editor writes here.
 2. **Legacy local** — stories saved in a browser by the pre-publishing version
    of this app. Kept so nobody's work vanished; nothing writes here any more.
-3. **Built-in** — `WORD_DATA` in `js/data.js`, never modified.
+3. **Built-in** — `WORD_DATA` in `public/js/data.js`, never modified.
 
 Published books are cached in `localStorage`, so a teacher on a dead connection
 still gets the books they had last time, and the generator keeps working.
@@ -225,7 +225,7 @@ instead.
 ## Checking decodability
 
 A decodable book is only decodable relative to what has been taught. Three
-things in `js/data.js` make that explicit, and checkable:
+things in `public/js/data.js` make that explicit, and checkable:
 
 | | |
 |---|---|
@@ -379,17 +379,17 @@ sheet 2 front:  6 | 3        sheet 2 back:  4 | 5
 
 | File | Role |
 |------|------|
-| `js/data.js` | Built-in stories, word lists, `SKILLS`, `SEQUENCE`, `SIGHT_WORDS`, templates |
-| `js/store.js` | `BookLibrary` — published/legacy/built-in layers, publishing, import/export |
+| `public/js/data.js` | Built-in stories, word lists, `SKILLS`, `SEQUENCE`, `SIGHT_WORDS`, templates |
+| `public/js/store.js` | `BookLibrary` — published/legacy/built-in layers, publishing, import/export |
 | `netlify/functions/` | `login` and `books` — the API, and the real security boundary |
 | `netlify/lib/credentials.mjs` | PBKDF2 hashing and HMAC token signing (server only) |
 | `tools/hash-password.mjs` | Generates the credential environment variables |
 | `tools/check-content.mjs` | Decodability checker (`npm run check-content`) |
-| `js/auth.js` | `Auth` — sign-in against the API, holds the session token |
-| `js/personalize.js` | Name and pronoun token substitution |
-| `js/generator.js` | Page building and saddle-stitch imposition |
-| `js/app.js` | Form wiring, dependent menus, status messages |
-| `css/style.css` | Screen styles + `@media print` booklet layout |
+| `public/js/auth.js` | `Auth` — sign-in against the API, holds the session token |
+| `public/js/personalize.js` | Name and pronoun token substitution |
+| `public/js/generator.js` | Page building and saddle-stitch imposition |
+| `public/js/app.js` | Form wiring, dependent menus, status messages |
+| `public/css/style.css` | Screen styles + `@media print` booklet layout |
 
 Book pages are black and white in the preview as well as in print, so what the
 teacher sees on screen is what comes out of the printer. Only the surrounding

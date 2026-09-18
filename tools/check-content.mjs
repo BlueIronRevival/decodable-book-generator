@@ -3,8 +3,8 @@
 //
 //   npm run check-content
 //
-// Reads every story in js/data.js and reports words a child could not yet sound
-// out at that point in the sequence. A word passes if it is:
+// Reads every story in public/js/data.js and reports words a child could not yet
+// sound out at that point in the sequence. A word passes if it is:
 //
 //   1. on the declared SIGHT_WORDS list, or a name in NAMES
 //   2. a practice word from this book or any earlier book in SEQUENCE
@@ -29,7 +29,7 @@ import { dirname, join } from 'node:path';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** data.js is a browser script, so read it rather than importing it. */
-export function loadData(path = join(ROOT, 'js', 'data.js')) {
+export function loadData(path = join(ROOT, 'public', 'js', 'data.js')) {
   const context = createContext({});
   const source = readFileSync(path, 'utf8');
   // Top-level `const` does not attach to the context, so end with an
