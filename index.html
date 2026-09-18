@@ -98,10 +98,52 @@
         </form>
       </section>
 
-      <!-- Story editor -->
-      <section class="editor-section">
+      <!-- Admin sign-in — gates the story editor below -->
+      <section class="auth-section" id="authSection">
+        <div class="auth-locked" id="authLocked">
+          <h2>🔐 Admin sign-in</h2>
+          <p class="auth-intro">
+            Sign in to write booklets that every teacher receives. Printing
+            needs no sign-in — that side stays open.
+          </p>
+          <form id="authForm" class="auth-form">
+            <div class="form-group">
+              <label for="authUsername">
+                <span class="label-icon">👤</span>
+                Username
+              </label>
+              <input type="text" id="authUsername" name="username"
+                     autocomplete="username" autocapitalize="none" spellcheck="false"
+                     placeholder="Username" required>
+            </div>
+
+            <div class="form-group">
+              <label for="authPassword">
+                <span class="label-icon">🔑</span>
+                Password
+              </label>
+              <input type="password" id="authPassword" name="password"
+                     autocomplete="current-password" placeholder="Password" required>
+            </div>
+
+            <div id="authStatus" class="form-status" role="status" aria-live="polite"></div>
+
+            <div class="auth-actions">
+              <button type="submit" class="btn btn-primary">🔓 Sign in</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="auth-bar" id="authBar" hidden>
+          <span class="auth-who">🔓 Signed in as <strong id="authWho"></strong></span>
+          <button type="button" id="signOutBtn" class="btn btn-tertiary">Sign out</button>
+        </div>
+      </section>
+
+      <!-- Story editor — admins only, revealed by signing in above -->
+      <section class="editor-section" id="editorSection" hidden>
         <details id="editorDetails">
-          <summary class="editor-summary">✍️ Write your own story <span id="editorBadge" class="editor-badge" hidden>edited</span></summary>
+          <summary class="editor-summary">✍️ Write a story <span id="editorBadge" class="editor-badge" hidden>published</span></summary>
           <div class="editor-body">
             <p class="editor-target">Editing: <strong id="editorTarget">— choose a skill first —</strong></p>
 
@@ -132,8 +174,8 @@
             </div>
 
             <div class="editor-actions">
-              <button type="button" id="saveStoryBtn" class="btn btn-primary">💾 Save story</button>
-              <button type="button" id="revertStoryBtn" class="btn btn-tertiary">↩️ Revert to built-in</button>
+              <button type="button" id="saveStoryBtn" class="btn btn-primary">📢 Publish story</button>
+              <button type="button" id="revertStoryBtn" class="btn btn-tertiary">↩️ Unpublish</button>
               <button type="button" id="exportBtn" class="btn btn-tertiary">⬇️ Export all</button>
               <button type="button" id="importBtn" class="btn btn-tertiary">⬆️ Import</button>
               <input type="file" id="importInput" accept="application/json,.json" hidden>
@@ -141,8 +183,10 @@
 
             <div id="editorStatus" class="form-status" role="status" aria-live="polite"></div>
             <p class="instructions-note">
-              Saved stories live in this browser only. Use <strong>Export all</strong>
-              to back them up or move them to another computer.
+              Publishing sends the story to the server, so every teacher gets it
+              the next time they load the page. <strong>Unpublish</strong> puts
+              the built-in story back for everyone. <strong>Export all</strong>
+              writes the published library to a file as a backup.
             </p>
           </div>
         </details>
@@ -188,6 +232,7 @@
 
   <script src="js/data.js"></script>
   <script src="js/store.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/personalize.js"></script>
   <script src="js/generator.js"></script>
   <script src="js/app.js"></script>

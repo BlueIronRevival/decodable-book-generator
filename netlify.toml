@@ -2,6 +2,15 @@
   publish = "."
   command = "echo 'No build needed - static site'"
 
+# The API lives in netlify/functions. Each function declares its own routes via
+# `export const config`; this rule simply keeps the SPA catch-all below from
+# swallowing anything under /api.
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+  force = false
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

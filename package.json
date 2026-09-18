@@ -1,0 +1,16 @@
+{
+  "name": "decodable-book-generator",
+  "version": "1.0.0",
+  "description": "Foldable, printable decodable reading books for elementary classrooms",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "hash-password": "node tools/hash-password.mjs",
+    "test": "node --experimental-test-module-mocks --test \"tests/*.test.mjs\"",
+    "check-content": "node tools/check-content.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  },
+  "license": "MIT"
+}
