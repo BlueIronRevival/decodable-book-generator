@@ -215,14 +215,14 @@ body {
 
 .auth-locked { padding: 28px; }
 
+/* The form follows the heading directly, so the heading carries the gap the
+   intro paragraph used to. */
 .auth-locked h2 {
   font-family: var(--font-heading);
   font-size: 1.4rem;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
   color: var(--primary-dark);
 }
-
-.auth-intro { font-size: 0.95rem; color: var(--text-light); margin-bottom: 20px; }
 
 /* Narrow on purpose: two short fields shouldn't stretch the full card width. */
 .auth-form {
